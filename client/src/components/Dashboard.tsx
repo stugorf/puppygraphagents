@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QueryInterface } from "./QueryInterface";
 import { GraphVisualization } from "./GraphVisualization";
+import { SchemaVisualization } from "./SchemaVisualization";
 import { DataTable } from "./DataTable";
 import { TemporalControls } from "./TemporalControls";
 import { MetricsCards } from "./MetricsCards";
@@ -37,16 +38,68 @@ interface QueryResult {
   cypher_query?: string;
 }
 
+interface GraphSchema {
+  vertices: Array<{
+    label: string;
+    oneToOne: {
+      tableSource: {
+        catalog: string;
+        schema: string;
+        table: string;
+      };
+      attributes: Array<{
+        type: string;
+        field: string;
+        alias: string;
+      }>;
+    };
+  }>;
+  edges: Array<{
+    label: string;
+    fromVertex: string;
+    toVertex: string;
+    tableSource: {
+      catalog: string;
+      schema: string;
+      table: string;
+    };
+    attributes?: Array<{
+      type: string;
+      field: string;
+      alias: string;
+    }>;
+  }>;
+}
+
 export function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("query");
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const [lastQuery, setLastQuery] = useState<string>("");
   const [isGraphExpanded, setIsGraphExpanded] = useState(false);
+  const [graphSchema, setGraphSchema] = useState<GraphSchema | null>(null);
   const [temporalParams, setTemporalParams] = useState<{
     startDate?: string;
     endDate?: string;
     granularity?: string;
   }>({});
+
+  // Fetch graph schema on component mount
+  useEffect(() => {
+    const fetchSchema = async () => {
+      try {
+        const response = await fetch('/api/graph/status');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Dashboard - Fetched schema data:', data.schema.graph);
+          setGraphSchema(data.schema.graph);
+        }
+      } catch (error) {
+        console.error('Failed to fetch graph schema:', error);
+      }
+    };
+    
+    fetchSchema();
+  }, []);
 
   const handleExecuteQuery = (query: string, type: 'natural' | 'cypher') => {
     console.log(`Executing ${type} query:`, query);
@@ -144,17 +197,8 @@ export function Dashboard() {
                 </TabsList>
                 
                 <TabsContent value="query" className="h-[calc(100%-3rem)] mt-4">
-                  <div className="space-y-4 h-full">
-                    <MetricsCards queryResult={queryResult} />
-                    <div className="flex-1">
-                      <GraphVisualization 
-                        nodes={queryResult?.nodes} 
-                        edges={queryResult?.edges}
-                        onNodeClick={handleNodeClick}
-                        isExpanded={isGraphExpanded}
-                        onExpand={handleExpandGraph}
-                      />
-                    </div>
+                  <div className="h-full overflow-y-auto">
+                    <SchemaVisualization schema={graphSchema} />
                   </div>
                 </TabsContent>
                 

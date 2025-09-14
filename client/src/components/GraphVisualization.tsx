@@ -39,9 +39,9 @@ const forceLayout = (nodes: GraphNode[], edges: GraphEdge[], width: number, heig
   
   const iterations = 100;
   const k = Math.sqrt((width * height) / Math.max(nodes.length, 1));
-  const minDistance = 60; // Minimum distance between nodes
-  const maxDistance = 200; // Maximum distance for attractive forces
-  const temperature = 0.2;
+  const minDistance = 80; // Minimum distance between nodes (increased for better separation)
+  const maxDistance = 250; // Maximum distance for attractive forces
+  const temperature = 0.3; // Increased temperature for more movement
   const coolingRate = 0.95;
   
   // Initialize positions with better distribution
@@ -53,12 +53,17 @@ const forceLayout = (nodes: GraphNode[], edges: GraphEdge[], width: number, heig
       const col = index % cols;
       const row = Math.floor(index / cols);
       
-      node.x = (col + 0.5) * (width / cols);
-      node.y = (row + 0.5) * (height / rows);
+      // Add more padding and better spacing
+      const padding = 100;
+      const availableWidth = width - 2 * padding;
+      const availableHeight = height - 2 * padding;
       
-      // Add some randomness to break symmetry
-      node.x += (Math.random() - 0.5) * 50;
-      node.y += (Math.random() - 0.5) * 50;
+      node.x = padding + (col + 0.5) * (availableWidth / cols);
+      node.y = padding + (row + 0.5) * (availableHeight / rows);
+      
+      // Add more randomness to break symmetry
+      node.x += (Math.random() - 0.5) * 80;
+      node.y += (Math.random() - 0.5) * 80;
     }
   });
 
@@ -188,24 +193,55 @@ export function GraphVisualization({
   const displayNodes = nodes || [];
   const displayEdges = edges || [];
   
+  // Track if layout has been applied to prevent unnecessary re-layouts
+  const [layoutApplied, setLayoutApplied] = useState(false);
+  const [lastNodeCount, setLastNodeCount] = useState(0);
+
   // Apply force layout when nodes change
   useEffect(() => {
     setSelectedNode(null);
     
-    if (displayNodes.length === 0) return;
+    if (displayNodes.length === 0) {
+      setLayoutApplied(false);
+      setLastNodeCount(0);
+      return;
+    }
+    
+    // Only apply layout if:
+    // 1. Layout hasn't been applied yet, OR
+    // 2. Node count has changed (new data), OR
+    // 3. Nodes don't have positions yet
+    const needsLayout = !layoutApplied || 
+                       lastNodeCount !== displayNodes.length ||
+                       displayNodes.some(node => node.x === undefined || node.y === undefined);
+    
+    if (!needsLayout) return;
     
     const applyForceLayout = () => {
       const containerWidth = containerRef.current?.clientWidth || 800;
       const containerHeight = containerRef.current?.clientHeight || 400;
       
-      console.log('Applying force layout to', displayNodes.length, 'nodes');
+      console.log('Applying force layout to', displayNodes.length, 'nodes', {
+        layoutApplied,
+        lastNodeCount,
+        needsLayout,
+        sampleNode: displayNodes[0] ? { id: displayNodes[0].id, x: displayNodes[0].x, y: displayNodes[0].y } : null
+      });
       
-      // Create a copy of nodes with random initial positions
-      const nodesCopy = displayNodes.map(node => ({ 
-        ...node, 
-        x: Math.random() * (containerWidth - 100) + 50,
-        y: Math.random() * (containerHeight - 100) + 50
-      }));
+      // Create a copy of nodes - only randomize if no existing positions
+      const nodesCopy = displayNodes.map(node => {
+        if (node.x !== undefined && node.y !== undefined) {
+          // Keep existing positions if they exist
+          return { ...node };
+        } else {
+          // Only randomize if no existing position
+          return { 
+            ...node, 
+            x: Math.random() * (containerWidth - 100) + 50,
+            y: Math.random() * (containerHeight - 100) + 50
+          };
+        }
+      });
       
       // Apply force layout
       const layoutedNodes = forceLayout(nodesCopy, displayEdges, containerWidth, containerHeight);
@@ -218,6 +254,9 @@ export function GraphVisualization({
         }
       });
       
+      setLayoutApplied(true);
+      setLastNodeCount(displayNodes.length);
+      
       console.log('Force layout applied:', displayNodes.map(n => ({ id: n.id, x: n.x, y: n.y })));
     };
     
@@ -228,7 +267,7 @@ export function GraphVisualization({
     const timeoutId = setTimeout(applyForceLayout, 50);
     
     return () => clearTimeout(timeoutId);
-  }, [nodes, edges]);
+  }, [nodes, edges, layoutApplied, lastNodeCount]);
 
   // Handle mouse events for dragging
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -319,12 +358,18 @@ export function GraphVisualization({
       const containerWidth = containerRef.current?.clientWidth || 800;
       const containerHeight = containerRef.current?.clientHeight || 400;
       
-      // Force a layout refresh by creating new positions
+      console.log('Manual layout refresh triggered');
+      
+      // Reset layout state to force re-layout
+      setLayoutApplied(false);
+      
+      // Create a copy of nodes with slight position adjustments to break symmetry
       const nodesCopy = displayNodes.map(node => ({ 
         ...node, 
-        x: Math.random() * (containerWidth - 100) + 50,
-        y: Math.random() * (containerHeight - 100) + 50
+        x: (node.x || 0) + (Math.random() - 0.5) * 20, // Small random adjustment
+        y: (node.y || 0) + (Math.random() - 0.5) * 20  // Small random adjustment
       }));
+      
       const layoutedNodes = forceLayout(nodesCopy, displayEdges, containerWidth, containerHeight);
       
       // Update the nodes with new positions
@@ -335,6 +380,7 @@ export function GraphVisualization({
         }
       });
       
+      setLayoutApplied(true);
       console.log('Manual layout refresh applied');
     }
   };
