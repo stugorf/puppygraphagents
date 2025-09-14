@@ -2,18 +2,40 @@
 > rest-express@1.0.0 dev
 > NODE_ENV=development tsx server/index.ts
 
-Failed to connect to PuppyGraph: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
-PuppyGraph client initialization failed, continuing without graph functionality: PuppyGraph connection failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
-9:44:56 AM [express] serving on port 5000
+Attempting to connect to PuppyGraph (attempt 1/10)...
+Connection attempt 1 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+10:18:19 AM [express] serving on port 5000
 Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
 
 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
-9:44:57 AM [express] GET /api/metrics 304 in 25ms :: {"totalEntities":"1010645","activeRelationships…
-Error getting graph status: Error: PuppyGraph client is not connected. Please ensure PuppyGraph service is running.
-    at PuppyGraphClient.getGraphSchema (/Users/davidhughes/dev/puppygraphagents/server/graph/puppygraph_client.ts:154:13)
-    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/routes.ts:348:45)
+10:18:20 AM [express] GET /api/metrics 304 in 23ms :: {"totalEntities":"1010645","activeRelationships…
+Attempting to connect to PuppyGraph (attempt 2/10)...
+Connection attempt 2 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 3/10)...
+Connection attempt 3 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+10:18:29 AM [express] GET /api/metrics 304 in 3ms :: {"totalEntities":"1010645","activeRelationships"…
+10:18:31 AM [express] GET /api/metrics 304 in 6ms :: {"totalEntities":"1010645","activeRelationships"…
+Attempting to connect to PuppyGraph (attempt 4/10)...
+Connection attempt 4 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 5/10)...
+Connection attempt 5 failed: Connection was closed by server
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 6/10)...
+Connection attempt 6 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 7/10)...
+Connection attempt 7 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Executing graph query: RETURN 42 as test_number
+Error executing graph query: Error: PuppyGraph client is not connected. Please ensure PuppyGraph service is running.
+    at PuppyGraphClient.executeCypherQuery (/Users/davidhughes/dev/puppygraphagents/server/graph/puppygraph_client.ts:97:13)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/routes.ts:261:45)
     at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
     at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:149:13)
     at Route.dispatch (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:119:3)
@@ -27,34 +49,75 @@ Error getting graph status: Error: PuppyGraph client is not connected. Please en
     at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
     at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
     at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
-    at urlencodedParser (/Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/types/urlencoded.js:94:7)
+    at urlencodedParser (/Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/types/urlencoded.js:85:7)
     at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
     at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
     at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
     at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
     at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
-    at jsonParser (/Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/types/json.js:113:7)
-    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
-    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
-    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
-    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
-    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
-    at expressInit (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/middleware/init.js:40:5)
-    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
-    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
-    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
-    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
-    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
-    at query (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/middleware/query.js:45:5)
-    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
-    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
-    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
-    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
-    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
-    at Function.handle (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:175:3)
-    at Function.handle (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/application.js:181:10)
-    at Server.app (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/express.js:39:9)
-    at Server.emit (node:events:507:28)
-    at parserOnIncoming (node:_http_server:1153:12)
-    at HTTPParser.parserOnHeadersComplete (node:_http_common:117:17)
-9:45:13 AM [express] GET /api/graph/status 500 in 3ms :: {"error":"Failed to get graph status","deta…
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/read.js:137:5
+    at AsyncResource.runInAsyncScope (node:async_hooks:214:14)
+    at invokeCallback (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:238:16)
+    at done (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:507:28)
+    at endReadableNT (node:internal/streams/readable:1696:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+10:18:53 AM [express] POST /api/graph/query 500 in 3ms :: {"error":"Failed to execute graph query","d…
+Attempting to connect to PuppyGraph (attempt 8/10)...
+Connection attempt 8 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 9/10)...
+Connection attempt 9 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 10/10)...
+Connection attempt 10 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+PuppyGraph client initialization failed, will retry in background: PuppyGraph connection failed after 10 attempts: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Attempting to connect to PuppyGraph (attempt 1/10)...
+Connected to PuppyGraph via Bolt protocol on port 7687
+Executing graph query: RETURN 42 as test_number
+Processing key: test_number, value: 42, type: number, isNode: false, isRelationship: false
+Adding scalar result: test_number = 42
+10:19:29 AM [express] POST /api/graph/query 200 in 25ms :: {"success":true,"nodes":[],"edges":[],"sca…
+Executing graph query: MATCH (n) RETURN count(n) as total_nodes LIMIT 1
+Processing key: total_nodes, value: 35, type: number, isNode: false, isRelationship: false
+Adding scalar result: total_nodes = 35
+10:19:32 AM [express] POST /api/graph/query 200 in 98ms :: {"success":true,"nodes":[],"edges":[],"sca…
+Executing graph query: MATCH (n) RETURN n LIMIT 3
+Processing key: n, value: (Company[d1d7c33e-112a-4ecb-b5a1-01e003e64ed4]:Company), type: object, isNode: true, isRelationship: false
+Processing key: n, value: (Company[6d095f6d-cb47-425f-af73-cf899f99d39a]:Company), type: object, isNode: true, isRelationship: false
+Processing key: n, value: (Company[1aa0da63-3adb-44db-90aa-c399e928062e]:Company), type: object, isNode: true, isRelationship: false
+10:19:36 AM [express] POST /api/graph/query 200 in 37ms :: {"success":true,"nodes":[{"id":"Company[d1…
+Executing graph query: MATCH (a)-[r]->(b) RETURN a, r, b LIMIT 3
+Processing key: a, value: (Company[a6fb1b71-3bfb-436f-9196-7e8187d60aa2]:Company), type: object, isNode: true, isRelationship: false
+Processing key: r, value: (Company[a6fb1b71-3bfb-436f-9196-7e8187d60aa2])-[:HAS_RATING]->(Rating[1af3d80f-718f-4cc7-bf13-08e40e548388]), type: object, isNode: false, isRelationship: true
+Processing key: b, value: (Rating[1af3d80f-718f-4cc7-bf13-08e40e548388]:Rating), type: object, isNode: true, isRelationship: false
+Processing key: a, value: (Company[6d095f6d-cb47-425f-af73-cf899f99d39a]:Company), type: object, isNode: true, isRelationship: false
+Processing key: r, value: (Company[6d095f6d-cb47-425f-af73-cf899f99d39a])-[:HAS_RATING]->(Rating[884906cb-8189-4f20-b225-70176db7bcb8]), type: object, isNode: false, isRelationship: true
+Processing key: b, value: (Rating[884906cb-8189-4f20-b225-70176db7bcb8]:Rating), type: object, isNode: true, isRelationship: false
+Processing key: a, value: (Company[5abb9075-7a4b-4ae2-9bc1-e8346ec5afba]:Company), type: object, isNode: true, isRelationship: false
+Processing key: r, value: (Company[5abb9075-7a4b-4ae2-9bc1-e8346ec5afba])-[:HAS_RATING]->(Rating[92ad2133-1273-4020-bdc7-f06765775229]), type: object, isNode: false, isRelationship: true
+Processing key: b, value: (Rating[92ad2133-1273-4020-bdc7-f06765775229]:Rating), type: object, isNode: true, isRelationship: false
+10:19:40 AM [express] POST /api/graph/query 200 in 50ms :: {"success":true,"nodes":[{"id":"Company[a6…
+Executing graph query: MATCH (c:Company)-[r:HAS_RATING]->(rating:Rating) RETURN c.name as company, rating.rating as rating_value LIMIT 5
+Processing key: company, value: Citigroup Inc, type: string, isNode: false, isRelationship: false
+Adding scalar result: company = Citigroup Inc
+Processing key: rating_value, value: BBB+, type: string, isNode: false, isRelationship: false
+Adding scalar result: rating_value = BBB+
+Processing key: company, value: Goldman Sachs Group Inc, type: string, isNode: false, isRelationship: false
+Adding scalar result: company = Goldman Sachs Group Inc
+Processing key: rating_value, value: A+, type: string, isNode: false, isRelationship: false
+Adding scalar result: rating_value = A+
+Processing key: company, value: Wells Fargo & Company, type: string, isNode: false, isRelationship: false
+Adding scalar result: company = Wells Fargo & Company
+Processing key: rating_value, value: A-, type: string, isNode: false, isRelationship: false
+Adding scalar result: rating_value = A-
+Processing key: company, value: JPMorgan Chase & Co, type: string, isNode: false, isRelationship: false
+Adding scalar result: company = JPMorgan Chase & Co
+Processing key: rating_value, value: A+, type: string, isNode: false, isRelationship: false
+Adding scalar result: rating_value = A+
+Processing key: company, value: Morgan Stanley, type: string, isNode: false, isRelationship: false
+Adding scalar result: company = Morgan Stanley
+Processing key: rating_value, value: A, type: string, isNode: false, isRelationship: false
+Adding scalar result: rating_value = A
+10:19:57 AM [express] POST /api/graph/query 200 in 96ms :: {"success":true,"nodes":[],"edges":[],"sca…

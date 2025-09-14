@@ -18,6 +18,7 @@ export interface GraphEdge {
 export interface GraphQueryResult {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  scalarResults?: any[];
   executionTime: number;
   cypherQuery: string;
 }
@@ -44,31 +45,51 @@ export class PuppyGraphClient {
   }
 
   async connect(): Promise<boolean> {
-    try {
-      // Connect to PuppyGraph using Bolt protocol on port 7687
-      const uri = 'bolt://localhost:7687';
-      this.driver = neo4j.driver(uri, neo4j.auth.basic(this.config.username, this.config.password), {
-        encrypted: false, // Disable encryption for PuppyGraph
-        trust: 'TRUST_ALL_CERTIFICATES'
-      });
-      
-      // Test the connection
-      const session = this.driver.session();
-      await session.run('RETURN 1 as test');
-      await session.close();
-      
-      this.isConnected = true;
-      console.log('Connected to PuppyGraph via Bolt protocol on port 7687');
-      return this.isConnected;
-    } catch (error) {
-      console.error('Failed to connect to PuppyGraph:', error instanceof Error ? error.message : 'Unknown error');
-      this.isConnected = false;
-      if (this.driver) {
-        await this.driver.close();
-        this.driver = null;
+    const maxRetries = 10;
+    const retryDelay = 5000; // 5 seconds
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Attempting to connect to PuppyGraph (attempt ${attempt}/${maxRetries})...`);
+        
+        // Connect to PuppyGraph using Bolt protocol on port 7687
+        const uri = 'bolt://localhost:7687';
+        this.driver = neo4j.driver(uri, neo4j.auth.basic(this.config.username, this.config.password), {
+          encrypted: false, // Disable encryption for PuppyGraph
+          trust: 'TRUST_ALL_CERTIFICATES',
+          maxConnectionLifetime: 30000,
+          maxConnectionPoolSize: 50,
+          connectionAcquisitionTimeout: 2000,
+          disableLosslessIntegers: true
+        });
+        
+        // Test the connection with a timeout
+        const session = this.driver.session();
+        const result = await session.run('RETURN 1 as test');
+        await session.close();
+        
+        this.isConnected = true;
+        console.log('Connected to PuppyGraph via Bolt protocol on port 7687');
+        return this.isConnected;
+      } catch (error) {
+        console.error(`Connection attempt ${attempt} failed:`, error instanceof Error ? error.message : 'Unknown error');
+        
+        if (this.driver) {
+          await this.driver.close();
+          this.driver = null;
+        }
+        
+        if (attempt < maxRetries) {
+          console.log(`Retrying in ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        } else {
+          this.isConnected = false;
+          throw new Error(`PuppyGraph connection failed after ${maxRetries} attempts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
       }
-      throw new Error(`PuppyGraph connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+    
+    return false;
   }
 
   async executeCypherQuery(cypherQuery: string): Promise<GraphQueryResult> {
@@ -78,6 +99,11 @@ export class PuppyGraphClient {
     
     const startTime = Date.now();
     return this.executeCypherOnPuppyGraph(cypherQuery, startTime);
+  }
+
+  // Alias for executeCypherQuery to match route expectations
+  async executeQuery(cypherQuery: string): Promise<GraphQueryResult> {
+    return this.executeCypherQuery(cypherQuery);
   }
 
   private async executeCypherOnPuppyGraph(cypherQuery: string, startTime: number): Promise<GraphQueryResult> {
@@ -93,6 +119,7 @@ export class PuppyGraphClient {
       // Transform Neo4j result to our format
       const nodes: GraphNode[] = [];
       const edges: GraphEdge[] = [];
+      const scalarResults: any[] = [];
       
       result.records.forEach(record => {
         record.keys.forEach(key => {
@@ -111,6 +138,16 @@ export class PuppyGraphClient {
               label: value.type,
               properties: value.properties
             });
+          } else {
+            // Handle scalar values (counts, aggregations, etc.)
+            let processedValue = value;
+            if (neo4j.isInt(value)) {
+              processedValue = value.toNumber();
+            }
+            scalarResults.push({
+              key: key,
+              value: processedValue
+            });
           }
         });
       });
@@ -118,6 +155,7 @@ export class PuppyGraphClient {
       return {
         nodes,
         edges,
+        scalarResults,
         executionTime,
         cypherQuery
       };
@@ -194,10 +232,15 @@ export class PuppyGraphClient {
 // Create a singleton instance
 export const puppyGraphClient = new PuppyGraphClient();
 
-// Initialize connection on module load
+// Initialize connection on module load with retry logic
 puppyGraphClient.connect().then(connected => {
   console.log(`PuppyGraph client initialized: Connected to PuppyGraph`);
 }).catch(error => {
-  console.warn('PuppyGraph client initialization failed, continuing without graph functionality:', error.message);
-  // Don't exit, just continue without PuppyGraph
+  console.warn('PuppyGraph client initialization failed, will retry in background:', error.message);
+  // Retry connection in background
+  setTimeout(() => {
+    puppyGraphClient.connect().catch(err => {
+      console.warn('Background PuppyGraph connection retry failed:', err.message);
+    });
+  }, 10000); // Retry after 10 seconds
 });

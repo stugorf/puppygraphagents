@@ -563,6 +563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cypher_query: query,
         nodes: result.nodes,
         edges: result.edges,
+        scalarResults: result.scalarResults,
         execution_time: executionTime
       });
 
