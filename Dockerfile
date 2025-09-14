@@ -19,8 +19,8 @@ RUN npm run build
 # Production stage
 FROM node:20-alpine AS production
 
-# Install Python for DSPy agents
-RUN apk add --no-cache python3 py3-pip python3-dev gcc musl-dev curl
+# Install Python for DSPy agents and Rust for tiktoken
+RUN apk add --no-cache python3 py3-pip python3-dev gcc musl-dev curl rust cargo
 
 # Set working directory
 WORKDIR /app
@@ -33,11 +33,10 @@ RUN npm ci --only=production && npm cache clean --force
 
 # Install Python dependencies using pyproject.toml
 COPY pyproject.toml uv.lock ./
-RUN pip3 install uv && uv pip install --system --no-cache .
+RUN pip3 install uv --break-system-packages && uv pip install --system --no-cache . --break-system-packages
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/client/dist ./public
+# Copy built client from builder stage
+COPY --from=builder /app/dist/public ./public
 
 # Copy server source files (needed for TypeScript execution)
 COPY server ./server
@@ -46,6 +45,8 @@ COPY drizzle.config.ts ./
 COPY vite.config.ts ./
 COPY tailwind.config.ts ./
 COPY postcss.config.js ./
+COPY tsconfig.json ./
+COPY tsconfig.server.json ./
 
 # Copy graph schema configuration for PuppyGraph
 COPY puppygraph-config/graph-schema.json ./puppygraph-config/

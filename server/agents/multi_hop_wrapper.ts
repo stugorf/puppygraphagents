@@ -53,11 +53,12 @@ from multi_hop_agent import MultiHopAgent
 import json
 
 # Initialize agent with API key from environment
-api_key = os.environ.get('OPENAI_API_KEY')
+api_key = os.environ.get('OPEN_ROUTER_KEY')
+api_base = os.environ.get('OPEN_ROUTER_API_BASE', 'https://openrouter.ai/api/v1')
 if not api_key:
-    raise ValueError("OPENAI_API_KEY environment variable not set")
+    raise ValueError("OPEN_ROUTER_KEY environment variable not set")
 
-agent = MultiHopAgent(api_key)
+agent = MultiHopAgent(api_key, api_base)
 
 # Process the complex query
 question = """${question.replace(/"/g, '\\"')}"""
@@ -79,7 +80,8 @@ print(json.dumps(output))
 `], {
         env: {
           ...process.env,
-          OPENAI_API_KEY: process.env.OPENAI_API_KEY
+          OPEN_ROUTER_KEY: process.env.OPEN_ROUTER_KEY,
+          OPEN_ROUTER_API_BASE: process.env.OPEN_ROUTER_API_BASE
         }
       });
 

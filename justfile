@@ -54,6 +54,19 @@ stop:
 # Restart the application
 restart: stop start
 
+# Rebuild and restart Docker services (useful for environment variable changes)
+rebuild:
+    @echo "🔄 Rebuilding Docker services with new environment variables..."
+    @echo "🛑 Stopping current services..."
+    docker-compose down
+    @echo "🔨 Rebuilding and starting services..."
+    docker-compose up --build -d
+    @echo "⏳ Waiting for services to be ready..."
+    @sleep 10
+    @echo "✅ Services rebuilt and restarted"
+    @echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"
+    @echo "🏥 Health check: http://localhost:{{ DEV_PORT }}/api/health"
+
 # Seed the database with initial financial data
 seed:
     @echo "🌱 Seeding database with financial data..."

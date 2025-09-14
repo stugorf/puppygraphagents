@@ -3,10 +3,14 @@ from typing import Dict, List, Optional, Any
 import os
 import json
 
-# Configure DSPy with OpenAI
+# Configure DSPy with OpenRouter
+openrouter_api_key = os.getenv("OPEN_ROUTER_KEY")
+openrouter_api_base = os.getenv("OPEN_ROUTER_API_BASE", "https://openrouter.ai/api/v1")
+
 dspy.configure(lm=dspy.LM(
-    model="gpt-4o-mini",
-    api_key=os.getenv("OPENAI_API_KEY"),
+    'openai/gpt-4o-mini',  # OpenRouter is compatible with OpenAI API format
+    api_key=openrouter_api_key,
+    api_base=openrouter_api_base,
     temperature=0.1
 ))
 

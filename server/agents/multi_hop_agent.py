@@ -81,13 +81,16 @@ class MultiHopAgent:
     Agent that performs multi-hop retrieval using DSPy for complex graph queries
     """
     
-    def __init__(self, openai_api_key: str):
-        # Configure DSPy with OpenAI using the modern API
+    def __init__(self, openrouter_api_key: str, openrouter_api_base: str = "https://openrouter.ai/api/v1"):
+        # Configure DSPy with OpenRouter using the modern API
         import os
-        os.environ['OPENAI_API_KEY'] = openai_api_key
+        os.environ['OPEN_ROUTER_KEY'] = openrouter_api_key
+        os.environ['OPEN_ROUTER_API_BASE'] = openrouter_api_base
         
         lm = dspy.LM(
-            'openai/gpt-4o-mini',
+            'openai/gpt-4o-mini',  # OpenRouter is compatible with OpenAI API format
+            api_key=openrouter_api_key,
+            api_base=openrouter_api_base,
             max_tokens=2000,
             temperature=0.1
         )
@@ -98,7 +101,7 @@ class MultiHopAgent:
         self.cypher_generator = dspy.ChainOfThought(CypherGeneration)
         self.result_analyzer = dspy.ChainOfThought(ResultAnalysis)
         
-        logger.info("MultiHopAgent initialized with OpenAI GPT-4o-mini")
+        logger.info("MultiHopAgent initialized with OpenRouter GPT-4o-mini")
     
     def process_complex_query(self, question: str, max_hops: int = 3) -> MultiHopResult:
         """
@@ -366,14 +369,15 @@ class MultiHopAgent:
 if __name__ == "__main__":
     import os
     
-    # Get API key from environment
-    api_key = os.getenv("OPENAI_API_KEY")
+    # Get API key and base URL from environment
+    api_key = os.getenv("OPEN_ROUTER_KEY")
+    api_base = os.getenv("OPEN_ROUTER_API_BASE", "https://openrouter.ai/api/v1")
     if not api_key:
-        print("OPENAI_API_KEY environment variable not set")
+        print("OPEN_ROUTER_KEY environment variable not set")
         exit(1)
     
     # Initialize agent
-    agent = MultiHopAgent(api_key)
+    agent = MultiHopAgent(api_key, api_base)
     
     # Test with a complex question
     test_question = "Show me financial services companies, their CEOs, and any credit ratings they have received in the last year"
