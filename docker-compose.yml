@@ -4,8 +4,9 @@ services:
     container_name: puppygraph
     pull_policy: always
     environment:
-      - PUPPYGRAPH_USERNAME=puppygraph
-      - PUPPYGRAPH_PASSWORD=puppygraph123
+      - PUPPYGRAPH_USERNAME=$PUPPYGRAPH_USERNAME
+      - PUPPYGRAPH_PASSWORD=$PUPPYGRAPH_PASSWORD
+      - SCHEMA_PATH=$PUPPYGRAPH_SCHEMA_PATH
     networks:
       - graph_network
     ports:

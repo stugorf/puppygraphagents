@@ -17,7 +17,29 @@ default:
 # Start the application (both frontend and backend)
 start:
     @echo "🚀 Starting Temporal Knowledge Graph application..."
-    npm run dev
+    @echo "📦 Starting Docker services..."
+    docker-compose up -d postgres puppygraph
+    @echo "⏳ Waiting for services to be ready..."
+    @sleep 10
+    @echo "🌱 Starting application server in background..."
+    @if [ -f .env ]; then \
+        set -a && source .env && set +a && nohup npm run dev > app.log 2>&1 & \
+        echo "✅ Application started in background (PID: $$!)"; \
+        echo "📋 Logs are being written to app.log"; \
+        echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"; \
+        echo "🏥 Health check: http://localhost:{{ DEV_PORT }}/api/health"; \
+        echo "📊 Run 'just status' to check if running"; \
+        echo "📋 Run 'just logs' to view logs"; \
+    else \
+        echo "⚠️  .env file not found, using system environment variables"; \
+        nohup npm run dev > app.log 2>&1 & \
+        echo "✅ Application started in background (PID: $$!)"; \
+        echo "📋 Logs are being written to app.log"; \
+        echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"; \
+        echo "🏥 Health check: http://localhost:{{ DEV_PORT }}/api/health"; \
+        echo "📊 Run 'just status' to check if running"; \
+        echo "📋 Run 'just logs' to view logs"; \
+    fi
 
 # Stop the application by killing processes on the development port
 stop:
@@ -25,6 +47,8 @@ stop:
     -pkill -f "npm run dev" || true
     -pkill -f "tsx server/index.ts" || true
     -lsof -ti:{{ DEV_PORT }} | xargs -r kill -9 || true
+    @echo "🐳 Stopping Docker services..."
+    docker-compose down
     @echo "✅ Application stopped"
 
 # Restart the application
@@ -33,7 +57,22 @@ restart: stop start
 # Seed the database with initial financial data
 seed:
     @echo "🌱 Seeding database with financial data..."
-    node scripts/seed-database.js
+    @echo "📦 Ensuring Docker services are running..."
+    docker-compose up -d postgres
+    @echo "⏳ Waiting for database to be ready..."
+    @sleep 5
+    @echo "🔄 Pushing database schema..."
+    @if [ -f .env ]; then \
+        set -a && source .env && set +a && npx drizzle-kit push; \
+    else \
+        npx drizzle-kit push; \
+    fi
+    @echo "🌱 Seeding database..."
+    @if [ -f .env ]; then \
+        set -a && source .env && set +a && node scripts/seed-database.js; \
+    else \
+        node scripts/seed-database.js; \
+    fi
     @echo "✅ Database seeded successfully"
 
 # Reset database (drop all data) and reseed
@@ -71,13 +110,28 @@ status:
         echo "❌ Application is not running"; \
     fi
 
-# Show logs (if running via systemd or pm2 - for future containerization)
+# Show logs from the background application
 logs:
     @echo "📋 Recent application logs:"
-    @if pgrep -f "npm run dev" > /dev/null; then \
-        echo "Application is running with PID: $(pgrep -f 'npm run dev')"; \
+    @if [ -f "app.log" ]; then \
+        echo "📄 Last 20 lines from app.log:"; \
+        tail -20 app.log; \
     else \
-        echo "No running application process found"; \
+        echo "❌ No log file found (app.log)"; \
+    fi
+    @if pgrep -f "npm run dev" > /dev/null; then \
+        echo "✅ Application is running with PID: $(pgrep -f 'npm run dev')"; \
+    else \
+        echo "❌ No running application process found"; \
+    fi
+
+# Follow logs in real-time
+follow-logs:
+    @echo "📋 Following application logs (Ctrl+C to stop):"
+    @if [ -f "app.log" ]; then \
+        tail -f app.log; \
+    else \
+        echo "❌ No log file found (app.log)"; \
     fi
 
 # Clean build artifacts and node_modules
@@ -87,6 +141,7 @@ clean:
     rm -rf dist
     rm -rf .next
     rm -rf .vite
+    rm -f app.log
     @echo "✅ Project cleaned"
 
 # Development helpers

@@ -52,7 +52,7 @@
               "alias": "industry"
             },
             {
-              "type": "String",
+              "type": "DECIMAL(15,2)",
               "field": "market_cap",
               "alias": "market_cap"
             },
@@ -149,12 +149,12 @@
               "alias": "rating_type"
             },
             {
-              "type": "String",
+              "type": "DATETIME",
               "field": "valid_from",
               "alias": "valid_from"
             },
             {
-              "type": "String",
+              "type": "DATETIME",
               "field": "valid_to",
               "alias": "valid_to"
             }
@@ -185,7 +185,7 @@
               "alias": "type"
             },
             {
-              "type": "String",
+              "type": "DECIMAL(15,2)",
               "field": "value",
               "alias": "value"
             },
@@ -200,12 +200,12 @@
               "alias": "status"
             },
             {
-              "type": "String",
+              "type": "DATETIME",
               "field": "announced_date",
               "alias": "announced_date"
             },
             {
-              "type": "String",
+              "type": "DATETIME",
               "field": "completed_date",
               "alias": "completed_date"
             },
@@ -251,7 +251,7 @@
               "alias": "description"
             },
             {
-              "type": "String",
+              "type": "DECIMAL(15,2)",
               "field": "amount",
               "alias": "amount"
             },
@@ -261,12 +261,12 @@
               "alias": "currency"
             },
             {
-              "type": "String",
+              "type": "DATETIME",
               "field": "event_date",
               "alias": "event_date"
             },
             {
-              "type": "String",
+              "type": "DATETIME",
               "field": "resolution_date",
               "alias": "resolution_date"
             },
@@ -314,17 +314,17 @@
             "alias": "position"
           },
           {
-            "type": "String",
+            "type": "DATETIME",
             "field": "start_date",
             "alias": "start_date"
           },
           {
-            "type": "String",
+            "type": "DATETIME",
             "field": "end_date",
             "alias": "end_date"
           },
           {
-            "type": "String",
+            "type": "DECIMAL(12,2)",
             "field": "salary",
             "alias": "salary"
           }

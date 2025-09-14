@@ -47,6 +47,9 @@ COPY vite.config.ts ./
 COPY tailwind.config.ts ./
 COPY postcss.config.js ./
 
+# Copy graph schema configuration for PuppyGraph
+COPY puppygraph-config/graph-schema.json ./puppygraph-config/
+
 # Create attached_assets directory
 RUN mkdir -p attached_assets
 

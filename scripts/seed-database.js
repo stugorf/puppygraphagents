@@ -8,10 +8,9 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
-import ws from 'ws';
 
 // Import schema
 import { 
@@ -26,15 +25,13 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Database connection (same pattern as server/db.ts)
-neonConfig.webSocketConstructor = ws;
-
+// Database connection for local PostgreSQL
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle({ client: pool, schema: { companies, people, ratings, employments, transactions, regulatoryEvents } });
+const db = drizzle(pool, { schema: { companies, people, ratings, employments, transactions, regulatoryEvents } });
 
 async function seedDatabase() {
   try {
