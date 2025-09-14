@@ -91,43 +91,8 @@ export function MetricsCards({ metrics, queryResult }: MetricsCardsProps) {
     }
   ] : [];
 
-  // Mock data for demonstration - fallback when API fails
-  const defaultMetrics: MetricData[] = [
-    {
-      title: "Total Entities",
-      value: "12,847",
-      change: "+234",
-      trend: "up",
-      icon: Database,
-      description: "Companies, executives, and transactions"
-    },
-    {
-      title: "Active Relationships",
-      value: "45,629",
-      change: "+1,205",
-      trend: "up",
-      icon: Activity,
-      description: "Current valid connections in graph"
-    },
-    {
-      title: "Temporal Events",
-      value: "8,394",
-      change: "-126",
-      trend: "down",
-      icon: Clock,
-      description: "Time-stamped changes this month"
-    },
-    {
-      title: "AI Queries Processed",
-      value: "2,847",
-      change: "+89",
-      trend: "up",
-      icon: Brain,
-      description: "Natural language queries today"
-    }
-  ];
-
-  const displayMetrics = metrics || (apiMetrics ? apiMetricsData : defaultMetrics);
+  // Use API metrics when available, otherwise show loading state
+  const displayMetrics = metrics || apiMetricsData;
 
   const getTrendIcon = (trend?: string) => {
     switch (trend) {

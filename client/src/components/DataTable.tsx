@@ -38,53 +38,8 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
   const [sortField, setSortField] = useState<string>("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  // Mock data for demonstration - todo: remove mock functionality
-  const mockData: FinancialRecord[] = [
-    {
-      id: "1",
-      entity: "Goldman Sachs",
-      event: "CEO Appointment",
-      date: "2024-01-15",
-      type: "executive",
-      status: "completed"
-    },
-    {
-      id: "2", 
-      entity: "JPMorgan Chase",
-      event: "Credit Rating Upgrade",
-      date: "2024-02-20",
-      value: "AA+",
-      type: "rating",
-      status: "active"
-    },
-    {
-      id: "3",
-      entity: "Wells Fargo",
-      event: "Regulatory Fine",
-      date: "2024-01-30",
-      value: "$50M",
-      type: "regulatory",
-      status: "completed"
-    },
-    {
-      id: "4",
-      entity: "Bank of America",
-      event: "Merger Discussion",
-      date: "2024-03-01",
-      type: "merger",
-      status: "pending"
-    },
-    {
-      id: "5",
-      entity: "Citigroup",
-      event: "CFO Resignation",
-      date: "2024-02-15",
-      type: "executive",
-      status: "completed"
-    }
-  ];
-
-  const displayData = data.length > 0 ? data : mockData;
+  // Use real data from API
+  const displayData = data || [];
 
   const filteredData = displayData
     .filter(record => {

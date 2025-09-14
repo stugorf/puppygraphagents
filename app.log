@@ -86,3 +86,203 @@ Calculated metrics: {
   aiQueriesProcessed: 0
 }
 1:45:35 PM [express] GET /api/metrics 200 in 16ms :: {"totalEntities":35,"activeRelationships":25,"t…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:47:03 PM [express] GET /api/metrics 304 in 14ms :: {"totalEntities":35,"activeRelationships":25,"t…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:47:04 PM [express] GET /api/metrics 304 in 3ms :: {"totalEntities":35,"activeRelationships":25,"te…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:47:05 PM [express] GET /api/metrics 304 in 2ms :: {"totalEntities":35,"activeRelationships":25,"te…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:47:06 PM [express] GET /api/metrics 304 in 2ms :: {"totalEntities":35,"activeRelationships":25,"te…
+1:47:11 PM [vite] hmr update /src/components/MetricsCards.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:47:11 PM [express] GET /api/metrics 304 in 2ms :: {"totalEntities":35,"activeRelationships":25,"te…
+1:47:19 PM [vite] hmr update /src/components/GraphVisualization.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:47:24 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:47:48 PM [express] GET /api/health 200 in 0ms :: {"status":"ok","timestamp":"2025-09-14T20:47:48.1…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:47:49 PM [express] GET /api/metrics 200 in 8ms :: {"totalEntities":35,"activeRelationships":25,"te…
+1:47:50 PM [express] GET /api/companies 200 in 3ms :: {"companies":[{"id":"d1d7c33e-112a-4ecb-b5a1-0…
+1:47:53 PM [express] GET /api/query/history 200 in 3ms :: {"queries":[],"total":0}
+1:47:55 PM [express] GET /api/graph/status 200 in 84ms :: {"connected":true,"mode":"puppygraph-bolt"…
+Processing natural language to graph query: Show me all companies
+Error in DSPy agent: Error: Python script failed with code 1: Traceback (most recent call last):
+  File "<string>", line 7, in <module>
+  File "/Users/davidhughes/dev/puppygraphagents/server/agents/dspy_agent.py", line 1, in <module>
+    import dspy
+ModuleNotFoundError: No module named 'dspy'
+
+    at ChildProcess.<anonymous> (/Users/davidhughes/dev/puppygraphagents/server/agents/dspy_wrapper.ts:57:18)
+    at ChildProcess.emit (node:events:507:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:305:5)
+1:48:06 PM [express] POST /api/graph/natural 400 in 115ms :: {"error":"Failed to generate Cypher que…
+1:48:14 PM [express] POST /api/graph/query 400 in 1ms :: {"error":"Invalid input parameters","detail…
+Executing graph query: MATCH (c:Company) RETURN c LIMIT 5
+1:48:17 PM [express] POST /api/graph/query 200 in 32ms :: {"success":true,"nodes":[{"id":"Company[55…
+1:48:30 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:48:30 PM [vite] hmr update /src/components/GraphVisualization.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:48:30 PM [vite] hmr update /src/components/MetricsCards.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:48:30 PM [express] GET /api/metrics 304 in 11ms :: {"totalEntities":35,"activeRelationships":25,"t…

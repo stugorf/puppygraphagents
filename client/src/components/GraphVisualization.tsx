@@ -39,28 +39,9 @@ export function GraphVisualization({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
 
-  // Use real data when available, only show mock when no data has ever been loaded
-  const hasRealData = nodes && nodes.length > 0;
-  
-  // Mock data for demonstration - only when no real data
-  const mockNodes: GraphNode[] = [
-    { id: "1", label: "Goldman Sachs", type: "company", x: 100, y: 100 },
-    { id: "2", label: "JPMorgan Chase", type: "company", x: 300, y: 150 },
-    { id: "3", label: "David Solomon", type: "person", x: 150, y: 250 },
-    { id: "4", label: "AAA Rating", type: "rating", x: 250, y: 50 },
-    { id: "5", label: "Merger Deal", type: "transaction", x: 400, y: 200 },
-  ];
-
-  const mockEdges: GraphEdge[] = [
-    { id: "e1", source: "1", target: "3", label: "CEO", type: "HAS_EXECUTIVE" },
-    { id: "e2", source: "1", target: "4", label: "rated", type: "HAS_RATING" },
-    { id: "e3", source: "2", target: "5", label: "involved", type: "PARTICIPATES_IN" },
-    { id: "e4", source: "1", target: "2", label: "competitor", type: "COMPETES_WITH" },
-  ];
-
-  // Always use real data when provided, fall back to mock only initially
-  const displayNodes = hasRealData ? nodes : (nodes !== undefined ? [] : mockNodes);
-  const displayEdges = hasRealData ? edges : (edges !== undefined ? [] : mockEdges);
+  // Use real data when available, show empty state when no data
+  const displayNodes = nodes || [];
+  const displayEdges = edges || [];
   
   // Reset selection when nodes change
   useEffect(() => {
