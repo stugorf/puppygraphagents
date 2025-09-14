@@ -10,9 +10,10 @@ import { Play, Pause, SkipBack, SkipForward, Calendar, Clock } from "lucide-reac
 interface TemporalControlsProps {
   onTimeRangeChange?: (startDate: string, endDate: string) => void;
   onPlaybackSpeed?: (speed: number) => void;
+  onGranularityChange?: (granularity: string) => void;
 }
 
-export function TemporalControls({ onTimeRangeChange, onPlaybackSpeed }: TemporalControlsProps) {
+export function TemporalControls({ onTimeRangeChange, onPlaybackSpeed, onGranularityChange }: TemporalControlsProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(50); // Percentage through timeline
   const [startDate, setStartDate] = useState("2023-01-01");
@@ -160,7 +161,10 @@ export function TemporalControls({ onTimeRangeChange, onPlaybackSpeed }: Tempora
         {/* Granularity Control */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Time Granularity</label>
-          <Select value={granularity} onValueChange={setGranularity}>
+          <Select value={granularity} onValueChange={(value) => {
+            setGranularity(value);
+            onGranularityChange?.(value);
+          }}>
             <SelectTrigger data-testid="select-granularity">
               <SelectValue />
             </SelectTrigger>

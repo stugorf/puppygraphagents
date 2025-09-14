@@ -138,6 +138,21 @@ print(json.dumps(output))
     });
   }
 
+  async processComplexQueryWithTemporal(
+    question: string, 
+    maxHops: number = 3,
+    startDate?: string,
+    endDate?: string,
+    granularity?: string
+  ): Promise<MultiHopResult> {
+    // For now, temporal multi-hop can fall back to regular processing
+    // In the future, this could incorporate temporal context into the multi-hop reasoning
+    console.log(`Multi-hop query with temporal context: ${question}, temporal: ${startDate} to ${endDate}, granularity: ${granularity}`);
+    
+    // TODO: Enhance multi-hop agent to use temporal context in reasoning steps
+    return await this.processComplexQuery(question, maxHops);
+  }
+
   async test(): Promise<boolean> {
     try {
       const testQuestion = "Find companies and their executives";

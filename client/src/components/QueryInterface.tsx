@@ -36,12 +36,19 @@ interface QueryResult {
   cypher_query?: string;
 }
 
+interface TemporalParams {
+  startDate?: string;
+  endDate?: string;
+  granularity?: string;
+}
+
 interface QueryInterfaceProps {
   onExecuteQuery?: (query: string, type: 'natural' | 'cypher') => void;
   onQueryResult?: (result: QueryResult) => void;
+  temporalParams?: TemporalParams;
 }
 
-export function QueryInterface({ onExecuteQuery, onQueryResult }: QueryInterfaceProps) {
+export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }: QueryInterfaceProps) {
   const [naturalQuery, setNaturalQuery] = useState("");
   const [cypherQuery, setCypherQuery] = useState("");
   const [activeTab, setActiveTab] = useState("natural");
@@ -99,10 +106,25 @@ export function QueryInterface({ onExecuteQuery, onQueryResult }: QueryInterface
       if (activeTab === "natural") {
         if (enableMultiHop) {
           apiUrl = '/api/graph/multi-hop';
-          requestBody = { query, max_hops: 3 };
+          requestBody = { 
+            query, 
+            max_hops: 3,
+            ...(temporalParams?.startDate && {
+              startDate: temporalParams.startDate,
+              endDate: temporalParams.endDate,
+              granularity: temporalParams.granularity
+            })
+          };
         } else {
           apiUrl = '/api/graph/natural';
-          requestBody = { query };
+          requestBody = { 
+            query,
+            ...(temporalParams?.startDate && {
+              startDate: temporalParams.startDate,
+              endDate: temporalParams.endDate,
+              granularity: temporalParams.granularity
+            })
+          };
         }
       } else {
         apiUrl = '/api/graph/query';

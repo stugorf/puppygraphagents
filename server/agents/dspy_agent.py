@@ -179,6 +179,60 @@ def process_multihop_query(question: str, max_hops: int = 3) -> Dict[str, Any]:
     """Process multi-hop reasoning queries."""
     return multihop_agent.forward(question, max_hops)
 
+def process_temporal_query(natural_query: str, start_date: Optional[str] = None, end_date: Optional[str] = None, granularity: Optional[str] = None) -> Dict[str, Any]:
+    """Process temporal queries with explicit time constraints."""
+    try:
+        # Build time context from parameters
+        time_context_parts = []
+        if start_date:
+            time_context_parts.append(f"from {start_date}")
+        if end_date:
+            time_context_parts.append(f"to {end_date}")
+        if granularity:
+            time_context_parts.append(f"at {granularity} granularity")
+        
+        time_context = " ".join(time_context_parts) if time_context_parts else "no specific time constraints"
+        
+        # Use temporal converter for time-aware query generation
+        temporal_result = query_agent.temporal_converter(
+            natural_query=natural_query,
+            time_context=time_context
+        )
+        
+        return {
+            "cypher_query": temporal_result.cypher_query,
+            "reasoning": temporal_result.temporal_reasoning,
+            "query_type": "temporal",
+            "time_context": time_context,
+            "temporal_params": {
+                "start_date": start_date,
+                "end_date": end_date, 
+                "granularity": granularity
+            }
+        }
+        
+    except Exception as e:
+        # Fallback to regular processing if temporal fails
+        print(f"Temporal processing failed: {e}, falling back to regular query")
+        
+        # Rebuild time context for fallback
+        time_context_parts = []
+        if start_date:
+            time_context_parts.append(f"from {start_date}")
+        if end_date:
+            time_context_parts.append(f"to {end_date}")
+        if granularity:
+            time_context_parts.append(f"at {granularity} granularity")
+        
+        fallback_time_context = " ".join(time_context_parts) if time_context_parts else "no specific time constraints"
+        
+        result = query_agent.forward(natural_query)
+        # Add temporal context to regular result
+        if result.get("time_context") or fallback_time_context != "no specific time constraints":
+            result["query_type"] = "temporal" 
+            result["time_context"] = fallback_time_context
+        return result
+
 if __name__ == "__main__":
     # Test the agent
     test_queries = [

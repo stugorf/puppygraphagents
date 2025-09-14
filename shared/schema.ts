@@ -176,3 +176,41 @@ export type InsertRegulatoryEvent = z.infer<typeof insertRegulatoryEventSchema>;
 
 export type QueryHistory = typeof queryHistory.$inferSelect;
 export type InsertQueryHistory = z.infer<typeof insertQueryHistorySchema>;
+
+// Temporal query validation schemas
+export const temporalQuerySchema = z.object({
+  query: z.string().min(1, "Query is required").max(1000, "Query too long"),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)").optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)").optional(),
+  granularity: z.enum(["day", "week", "month", "quarter", "year"]).optional()
+}).refine(
+  (data) => {
+    if (data.startDate && data.endDate) {
+      return new Date(data.startDate) <= new Date(data.endDate);
+    }
+    return true;
+  },
+  {
+    message: "Start date must be before or equal to end date",
+    path: ["endDate"]
+  }
+);
+
+export const naturalLanguageQuerySchema = z.object({
+  query: z.string().min(1, "Query is required").max(1000, "Query too long")
+});
+
+export const multiHopQuerySchema = z.object({
+  query: z.string().min(1, "Query is required").max(1000, "Query too long"),
+  max_hops: z.number().int().min(1).max(5).optional().default(3)
+});
+
+export const cypherQuerySchema = z.object({
+  cypher_query: z.string().min(1, "Cypher query is required").max(2000, "Cypher query too long")
+});
+
+// Type exports for temporal queries
+export type TemporalQuery = z.infer<typeof temporalQuerySchema>;
+export type NaturalLanguageQuery = z.infer<typeof naturalLanguageQuerySchema>;
+export type MultiHopQuery = z.infer<typeof multiHopQuerySchema>;
+export type CypherQuery = z.infer<typeof cypherQuerySchema>;

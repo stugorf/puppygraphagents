@@ -25,7 +25,7 @@ export class DSPyAgent {
     this.agentPath = path.join(process.cwd(), 'server', 'agents', 'dspy_agent.py');
   }
 
-  private async runPythonScript(script: string, args: string[] = []): Promise<any> {
+  private async runPythonScript(script: string, stdinData?: string): Promise<any> {
     return new Promise((resolve, reject) => {
       const python = spawn(this.pythonPath, ['-c', script], {
         env: {
@@ -33,6 +33,12 @@ export class DSPyAgent {
           PYTHONPATH: path.join(process.cwd(), '.pythonlibs', 'lib', 'python3.11', 'site-packages')
         }
       });
+
+      // Send JSON data via stdin if provided
+      if (stdinData) {
+        python.stdin.write(stdinData);
+        python.stdin.end();
+      }
 
       let stdout = '';
       let stderr = '';
@@ -71,12 +77,13 @@ sys.path.append('${path.join(process.cwd(), 'server', 'agents')}')
 
 from dspy_agent import process_natural_query
 
-query = "${naturalQuery.replace(/"/g, '\\"')}"
-result = process_natural_query(query)
+data = json.loads(sys.stdin.read())
+result = process_natural_query(data['query'])
 print(json.dumps(result))
 `;
 
-      const result = await this.runPythonScript(script);
+      const inputData = JSON.stringify({ query: naturalQuery });
+      const result = await this.runPythonScript(script, inputData);
       return result as DSPyResult;
     } catch (error) {
       console.error('Error in DSPy agent:', error);
@@ -86,6 +93,48 @@ print(json.dumps(result))
         query_type: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
+    }
+  }
+
+  async processNaturalQueryWithTemporal(
+    naturalQuery: string, 
+    startDate?: string, 
+    endDate?: string, 
+    granularity?: string
+  ): Promise<DSPyResult> {
+    try {
+      const script = `
+import sys
+import os
+import json
+sys.path.append('${path.join(process.cwd(), 'server', 'agents')}')
+
+from dspy_agent import process_temporal_query
+
+data = json.loads(sys.stdin.read())
+result = process_temporal_query(
+    data['query'], 
+    data.get('start_date'), 
+    data.get('end_date'), 
+    data.get('granularity')
+)
+print(json.dumps(result))
+`;
+
+      const inputData = JSON.stringify({
+        query: naturalQuery,
+        start_date: startDate || null,
+        end_date: endDate || null,
+        granularity: granularity || null
+      });
+      const result = await this.runPythonScript(script, inputData);
+      return result as DSPyResult;
+    } catch (error) {
+      console.error('Error in temporal DSPy agent:', error);
+      
+      // Fallback to regular query if temporal processing fails
+      console.log('Falling back to regular natural query processing...');
+      return await this.processNaturalQuery(naturalQuery);
     }
   }
 
@@ -99,12 +148,13 @@ sys.path.append('${path.join(process.cwd(), 'server', 'agents')}')
 
 from dspy_agent import process_multihop_query
 
-question = "${question.replace(/"/g, '\\"')}"
-result = process_multihop_query(question, ${maxHops})
+data = json.loads(sys.stdin.read())
+result = process_multihop_query(data['question'], data['max_hops'])
 print(json.dumps(result))
 `;
 
-      const result = await this.runPythonScript(script);
+      const inputData = JSON.stringify({ question, max_hops: maxHops });
+      const result = await this.runPythonScript(script, inputData);
       return result as MultiHopResult;
     } catch (error) {
       console.error('Error in multi-hop DSPy agent:', error);

@@ -4,7 +4,13 @@ import { storage } from "./storage";
 import { dspyAgent } from "./agents/dspy_wrapper";
 import { puppyGraphClient } from "./graph/puppygraph_client";
 import { multiHopAgent } from "./agents/multi_hop_wrapper";
-import { insertQueryHistorySchema } from "@shared/schema";
+import { 
+  insertQueryHistorySchema, 
+  temporalQuerySchema, 
+  naturalLanguageQuerySchema, 
+  multiHopQuerySchema, 
+  cypherQuerySchema 
+} from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -17,11 +23,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DSPy Agent Query Processing
   app.post("/api/query/natural", async (req, res) => {
     try {
-      const { query } = req.body;
-      
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ error: "Query is required and must be a string" });
+      // Validate input with Zod schema
+      const validationResult = naturalLanguageQuerySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid input parameters",
+          details: validationResult.error.issues
+        });
       }
+
+      const { query } = validationResult.data;
 
       console.log(`Processing natural language query: ${query}`);
       const startTime = Date.now();
@@ -69,11 +80,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Multi-hop Query Processing
   app.post("/api/query/multihop", async (req, res) => {
     try {
-      const { question, max_hops = 3 } = req.body;
-      
-      if (!question || typeof question !== 'string') {
-        return res.status(400).json({ error: "Question is required and must be a string" });
+      // Validate input with Zod schema  
+      const validationResult = multiHopQuerySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid input parameters",
+          details: validationResult.error.issues
+        });
       }
+
+      const { query: question, max_hops = 3 } = validationResult.data;
 
       console.log(`Processing multi-hop query: ${question}`);
       const startTime = Date.now();
@@ -173,11 +189,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Graph Query Endpoints (PuppyGraph integration)
   app.post("/api/graph/query", async (req, res) => {
     try {
-      const { cypher_query } = req.body;
-      
-      if (!cypher_query || typeof cypher_query !== 'string') {
-        return res.status(400).json({ error: "cypher_query is required and must be a string" });
+      // Validate input with Zod schema
+      const validationResult = cypherQuerySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid input parameters",
+          details: validationResult.error.issues
+        });
       }
+
+      const { cypher_query } = validationResult.data;
 
       console.log(`Executing graph query: ${cypher_query}`);
       const result = await puppyGraphClient.executeCypherQuery(cypher_query);
@@ -371,17 +392,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Natural Language Query with Graph Results
   app.post("/api/graph/natural", async (req, res) => {
     try {
-      const { query } = req.body;
-      
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ error: "Query is required and must be a string" });
+      // Validate input with Zod schema
+      const validationResult = temporalQuerySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid input parameters",
+          details: validationResult.error.issues
+        });
       }
+
+      const { query, startDate, endDate, granularity } = validationResult.data;
 
       console.log(`Processing natural language query for graph: ${query}`);
       const startTime = Date.now();
       
-      // Process query with DSPy agent
-      const dspyResult = await dspyAgent.processNaturalQuery(query);
+      // Process query with DSPy agent (with temporal context if provided)
+      const dspyResult = await dspyAgent.processNaturalQueryWithTemporal(query, startDate, endDate, granularity);
       
       if (dspyResult.query_type === 'error') {
         return res.json({
@@ -411,6 +437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             reasoning: dspyResult.reasoning, 
             query_type: dspyResult.query_type,
             time_context: dspyResult.time_context,
+            temporal_params: { startDate, endDate, granularity },
             nodes_count: graphResult.nodes.length,
             edges_count: graphResult.edges.length
           },
@@ -496,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Multi-hop Query with Graph Results  
   app.post("/api/graph/multi-hop", async (req, res) => {
     try {
-      const { query, max_hops = 3 } = req.body;
+      const { query, max_hops = 3, startDate, endDate, granularity } = req.body;
       
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: "Query is required and must be a string" });
@@ -505,7 +532,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Processing multi-hop graph query: ${query}`);
       const startTime = Date.now();
       
-      const result = await multiHopAgent.processComplexQuery(query, max_hops);
+      // Use temporal-aware processing if temporal parameters are provided
+      const result = (startDate || endDate || granularity) 
+        ? await multiHopAgent.processComplexQueryWithTemporal(query, max_hops, startDate, endDate, granularity)
+        : await multiHopAgent.processComplexQuery(query, max_hops);
       const totalExecutionTime = Date.now() - startTime;
 
       if (result.error) {

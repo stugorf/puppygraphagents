@@ -40,6 +40,11 @@ export function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("query");
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const [lastQuery, setLastQuery] = useState<string>("");
+  const [temporalParams, setTemporalParams] = useState<{
+    startDate?: string;
+    endDate?: string;
+    granularity?: string;
+  }>({});
 
   const handleExecuteQuery = (query: string, type: 'natural' | 'cypher') => {
     console.log(`Executing ${type} query:`, query);
@@ -65,10 +70,17 @@ export function Dashboard() {
 
   const handleTimeRangeChange = (startDate: string, endDate: string) => {
     console.log('Time range changed:', { startDate, endDate });
+    setTemporalParams(prev => ({ ...prev, startDate, endDate }));
   };
 
   const handlePlaybackSpeed = (speed: number) => {
     console.log('Playback speed changed:', speed);
+    // Speed changes could affect granularity in the future
+  };
+
+  const handleGranularityChange = (granularity: string) => {
+    console.log('Granularity changed:', granularity);
+    setTemporalParams(prev => ({ ...prev, granularity }));
   };
 
   return (
@@ -93,6 +105,7 @@ export function Dashboard() {
               <QueryInterface 
                 onExecuteQuery={handleExecuteQuery} 
                 onQueryResult={handleQueryResult}
+                temporalParams={temporalParams}
               />
             </div>
           </ResizablePanel>
@@ -149,6 +162,7 @@ export function Dashboard() {
               <TemporalControls 
                 onTimeRangeChange={handleTimeRangeChange}
                 onPlaybackSpeed={handlePlaybackSpeed}
+                onGranularityChange={handleGranularityChange}
               />
             </div>
           </ResizablePanel>
