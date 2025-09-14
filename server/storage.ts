@@ -1,38 +1,147 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { 
+  type Company, 
+  type Person, 
+  type Employment,
+  type Rating,
+  type Transaction,
+  type RegulatoryEvent,
+  type QueryHistory,
+  type InsertQueryHistory,
+  companies,
+  people,
+  employments,
+  ratings,
+  transactions,
+  regulatoryEvents,
+  queryHistory
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, like, sql } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // Query History methods
+  insertQueryHistory(query: InsertQueryHistory): Promise<QueryHistory>;
+  getQueryHistory(limit: number, offset: number): Promise<QueryHistory[]>;
+  
+  // Company methods
+  getCompanies(sector?: string, limit?: number): Promise<Company[]>;
+  getCompanyRelationships(companyId: string): Promise<any>;
+  
+  // Person methods
+  getPeople(limit?: number): Promise<Person[]>;
+  
+  // Financial data methods
+  getRatings(companyId?: string): Promise<Rating[]>;
+  getTransactions(limit?: number): Promise<Transaction[]>;
+  getRegulatoryEvents(companyId?: string): Promise<RegulatoryEvent[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  
+  async insertQueryHistory(query: InsertQueryHistory): Promise<QueryHistory> {
+    const [result] = await db.insert(queryHistory).values(query).returning();
+    return result;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getQueryHistory(limit: number = 20, offset: number = 0): Promise<QueryHistory[]> {
+    return await db
+      .select()
+      .from(queryHistory)
+      .orderBy(desc(queryHistory.createdAt))
+      .limit(limit)
+      .offset(offset);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getCompanies(sector?: string, limit: number = 50): Promise<Company[]> {
+    let query = db.select().from(companies);
+    
+    if (sector) {
+      query = query.where(eq(companies.sector, sector));
+    }
+    
+    return await query.limit(limit);
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getCompanyRelationships(companyId: string): Promise<any> {
+    // Get all relationships for a company
+    const [
+      companyEmployments,
+      companyRatings,
+      companyTransactions,
+      companyRegulatoryEvents
+    ] = await Promise.all([
+      // Employments with person details
+      db
+        .select({
+          employment: employments,
+          person: people
+        })
+        .from(employments)
+        .leftJoin(people, eq(employments.personId, people.id))
+        .where(eq(employments.companyId, companyId)),
+      
+      // Ratings
+      db
+        .select()
+        .from(ratings)
+        .where(eq(ratings.companyId, companyId))
+        .orderBy(desc(ratings.validFrom)),
+      
+      // Transactions (as acquirer or target)
+      db
+        .select()
+        .from(transactions)
+        .where(
+          sql`${transactions.acquirerId} = ${companyId} OR ${transactions.targetId} = ${companyId}`
+        ),
+      
+      // Regulatory events
+      db
+        .select()
+        .from(regulatoryEvents)
+        .where(eq(regulatoryEvents.companyId, companyId))
+        .orderBy(desc(regulatoryEvents.eventDate))
+    ]);
+
+    return {
+      employments: companyEmployments,
+      ratings: companyRatings,
+      transactions: companyTransactions,
+      regulatory_events: companyRegulatoryEvents
+    };
+  }
+
+  async getPeople(limit: number = 50): Promise<Person[]> {
+    return await db.select().from(people).limit(limit);
+  }
+
+  async getRatings(companyId?: string): Promise<Rating[]> {
+    let query = db.select().from(ratings).orderBy(desc(ratings.validFrom));
+    
+    if (companyId) {
+      query = query.where(eq(ratings.companyId, companyId));
+    }
+    
+    return await query;
+  }
+
+  async getTransactions(limit: number = 50): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(transactions)
+      .orderBy(desc(transactions.announcedDate))
+      .limit(limit);
+  }
+
+  async getRegulatoryEvents(companyId?: string): Promise<RegulatoryEvent[]> {
+    let query = db.select().from(regulatoryEvents).orderBy(desc(regulatoryEvents.eventDate));
+    
+    if (companyId) {
+      query = query.where(eq(regulatoryEvents.companyId, companyId));
+    }
+    
+    return await query;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

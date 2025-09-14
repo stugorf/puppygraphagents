@@ -1,13 +1,172 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { dspyAgent } from "./agents/dspy_wrapper";
+import { insertQueryHistorySchema } from "@shared/schema";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // DSPy Agent Query Processing
+  app.post("/api/query/natural", async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Query is required and must be a string" });
+      }
+
+      console.log(`Processing natural language query: ${query}`);
+      const startTime = Date.now();
+      
+      // Process query with DSPy agent
+      const result = await dspyAgent.processNaturalQuery(query);
+      const executionTime = Date.now() - startTime;
+
+      // Save query to history
+      try {
+        await storage.insertQueryHistory({
+          originalQuery: query,
+          queryType: "natural",
+          generatedCypher: result.cypher_query,
+          results: { 
+            reasoning: result.reasoning, 
+            query_type: result.query_type,
+            time_context: result.time_context 
+          },
+          executionTime
+        });
+      } catch (historyError) {
+        console.warn("Failed to save query history:", historyError);
+      }
+
+      res.json({
+        success: result.query_type !== 'error',
+        query_type: result.query_type,
+        cypher_query: result.cypher_query,
+        reasoning: result.reasoning,
+        time_context: result.time_context,
+        execution_time: executionTime,
+        error: result.error
+      });
+
+    } catch (error) {
+      console.error("Error processing natural language query:", error);
+      res.status(500).json({ 
+        error: "Failed to process query",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Multi-hop Query Processing
+  app.post("/api/query/multihop", async (req, res) => {
+    try {
+      const { question, max_hops = 3 } = req.body;
+      
+      if (!question || typeof question !== 'string') {
+        return res.status(400).json({ error: "Question is required and must be a string" });
+      }
+
+      console.log(`Processing multi-hop query: ${question}`);
+      const startTime = Date.now();
+      
+      const result = await dspyAgent.processMultiHopQuery(question, max_hops);
+      const executionTime = Date.now() - startTime;
+
+      res.json({
+        success: !result.error,
+        hops: result.hops,
+        reasoning: result.reasoning,
+        final_query: result.final_query,
+        execution_time: executionTime,
+        error: result.error
+      });
+
+    } catch (error) {
+      console.error("Error processing multi-hop query:", error);
+      res.status(500).json({ 
+        error: "Failed to process multi-hop query",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get Query History
+  app.get("/api/query/history", async (req, res) => {
+    try {
+      const { limit = 20, offset = 0 } = req.query;
+      const history = await storage.getQueryHistory(
+        parseInt(limit as string), 
+        parseInt(offset as string)
+      );
+      
+      res.json({
+        queries: history,
+        total: history.length
+      });
+    } catch (error) {
+      console.error("Error fetching query history:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch query history",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Financial Data Endpoints
+  app.get("/api/companies", async (req, res) => {
+    try {
+      const { sector, limit = 50 } = req.query;
+      const companies = await storage.getCompanies(
+        sector as string, 
+        parseInt(limit as string)
+      );
+      res.json({ companies });
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch companies",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/companies/:id/relationships", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const relationships = await storage.getCompanyRelationships(id);
+      res.json({ relationships });
+    } catch (error) {
+      console.error("Error fetching company relationships:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch company relationships",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Test DSPy Agent Status
+  app.get("/api/agent/status", async (req, res) => {
+    try {
+      const isWorking = await dspyAgent.test();
+      res.json({ 
+        status: isWorking ? "operational" : "error",
+        agent_type: "DSPy",
+        capabilities: ["natural_language_to_cypher", "multi_hop_reasoning"]
+      });
+    } catch (error) {
+      res.json({ 
+        status: "error", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   const httpServer = createServer(app);
 
