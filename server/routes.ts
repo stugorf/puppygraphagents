@@ -365,6 +365,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ FRONTEND-COMPATIBLE GRAPH API ROUTES ============
+  // These routes match the frontend expectations and return nodes/edges format
+
+  // Natural Language Query with Graph Results
+  app.post("/api/graph/natural", async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Query is required and must be a string" });
+      }
+
+      console.log(`Processing natural language query for graph: ${query}`);
+      const startTime = Date.now();
+      
+      // Process query with DSPy agent
+      const dspyResult = await dspyAgent.processNaturalQuery(query);
+      
+      if (dspyResult.query_type === 'error') {
+        return res.json({
+          success: false,
+          error: dspyResult.error,
+          reasoning: dspyResult.reasoning,
+          nodes: [],
+          edges: [],
+          execution_time: Date.now() - startTime
+        });
+      }
+
+      // Execute Cypher query and get graph results
+      const graphStartTime = Date.now();
+      const graphResult = await puppyGraphClient.executeQuery(dspyResult.cypher_query);
+      const graphExecutionTime = Date.now() - graphStartTime;
+      
+      const totalExecutionTime = Date.now() - startTime;
+
+      // Save to history
+      try {
+        await storage.insertQueryHistory({
+          originalQuery: query,
+          queryType: "natural",
+          generatedCypher: dspyResult.cypher_query,
+          results: { 
+            reasoning: dspyResult.reasoning, 
+            query_type: dspyResult.query_type,
+            time_context: dspyResult.time_context,
+            nodes_count: graphResult.nodes.length,
+            edges_count: graphResult.edges.length
+          },
+          executionTime: totalExecutionTime
+        });
+      } catch (historyError) {
+        console.warn("Failed to save query history:", historyError);
+      }
+
+      res.json({
+        success: true,
+        query_type: dspyResult.query_type,
+        cypher_query: dspyResult.cypher_query,
+        reasoning: dspyResult.reasoning,
+        time_context: dspyResult.time_context,
+        nodes: graphResult.nodes,
+        edges: graphResult.edges,
+        graph_execution_time: graphExecutionTime,
+        total_execution_time: totalExecutionTime
+      });
+
+    } catch (error) {
+      console.error("Error processing natural language graph query:", error);
+      res.status(500).json({ 
+        error: "Failed to process graph query",
+        details: error instanceof Error ? error.message : "Unknown error",
+        nodes: [],
+        edges: []
+      });
+    }
+  });
+
+  // Direct Cypher Query Execution
+  app.post("/api/graph/query", async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Query is required and must be a string" });
+      }
+
+      console.log(`Executing direct Cypher query: ${query}`);
+      const startTime = Date.now();
+      
+      const result = await puppyGraphClient.executeQuery(query);
+      const executionTime = Date.now() - startTime;
+
+      // Save to history
+      try {
+        await storage.insertQueryHistory({
+          originalQuery: query,
+          queryType: "direct",
+          generatedCypher: query,
+          results: { 
+            nodes_count: result.nodes.length,
+            edges_count: result.edges.length
+          },
+          executionTime
+        });
+      } catch (historyError) {
+        console.warn("Failed to save query history:", historyError);
+      }
+
+      res.json({
+        success: true,
+        cypher_query: query,
+        nodes: result.nodes,
+        edges: result.edges,
+        execution_time: executionTime
+      });
+
+    } catch (error) {
+      console.error("Error executing direct Cypher query:", error);
+      res.status(500).json({ 
+        error: "Failed to execute query",
+        details: error instanceof Error ? error.message : "Unknown error",
+        nodes: [],
+        edges: []
+      });
+    }
+  });
+
+  // Multi-hop Query with Graph Results  
+  app.post("/api/graph/multi-hop", async (req, res) => {
+    try {
+      const { query, max_hops = 3 } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Query is required and must be a string" });
+      }
+
+      console.log(`Processing multi-hop graph query: ${query}`);
+      const startTime = Date.now();
+      
+      const result = await multiHopAgent.processComplexQuery(query, max_hops);
+      const totalExecutionTime = Date.now() - startTime;
+
+      if (result.error) {
+        return res.json({
+          success: false,
+          error: result.error,
+          reasoning: result.reasoning,
+          hops: result.hops,
+          nodes: [],
+          edges: [],
+          execution_time: totalExecutionTime
+        });
+      }
+
+      // Transform edge format: final_edges use from_id/to_id, frontend expects fromId/toId
+      const transformedEdges = result.final_edges.map(edge => ({
+        id: edge.id,
+        fromId: edge.from_id,
+        toId: edge.to_id,
+        label: edge.label,
+        properties: edge.properties
+      }));
+
+      // Save to history
+      try {
+        await storage.insertQueryHistory({
+          originalQuery: query,
+          queryType: "multi-hop",
+          generatedCypher: result.cypher_queries.join('; '),
+          results: { 
+            reasoning: result.reasoning,
+            hops: result.hops,
+            nodes_count: result.final_nodes.length,
+            edges_count: result.final_edges.length
+          },
+          executionTime: totalExecutionTime
+        });
+      } catch (historyError) {
+        console.warn("Failed to save query history:", historyError);
+      }
+
+      res.json({
+        success: true,
+        reasoning: result.reasoning,
+        hops: result.hops,
+        cypher_queries: result.cypher_queries,
+        nodes: result.final_nodes,
+        edges: transformedEdges,
+        multi_hop_execution_time: result.execution_time,
+        total_execution_time: totalExecutionTime
+      });
+
+    } catch (error) {
+      console.error("Error processing multi-hop graph query:", error);
+      res.status(500).json({ 
+        error: "Failed to process multi-hop query",
+        details: error instanceof Error ? error.message : "Unknown error",
+        nodes: [],
+        edges: []
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -49,14 +49,15 @@ import sys
 import os
 sys.path.append('${this.agentsDir}')
 
-# Set environment variables
-os.environ['OPENAI_API_KEY'] = '${process.env.OPENAI_API_KEY}'
-
 from multi_hop_agent import MultiHopAgent
 import json
 
-# Initialize agent
-agent = MultiHopAgent(os.environ['OPENAI_API_KEY'])
+# Initialize agent with API key from environment
+api_key = os.environ.get('OPENAI_API_KEY')
+if not api_key:
+    raise ValueError("OPENAI_API_KEY environment variable not set")
+
+agent = MultiHopAgent(api_key)
 
 # Process the complex query
 question = """${question.replace(/"/g, '\\"')}"""
@@ -75,7 +76,12 @@ output = {
 }
 
 print(json.dumps(output))
-`]);
+`], {
+        env: {
+          ...process.env,
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY
+        }
+      });
 
       let outputData = '';
       let errorData = '';
