@@ -39,7 +39,10 @@ export function GraphVisualization({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
 
-  // Mock data for demonstration - todo: remove mock functionality
+  // Use real data when available, only show mock when no data has ever been loaded
+  const hasRealData = nodes && nodes.length > 0;
+  
+  // Mock data for demonstration - only when no real data
   const mockNodes: GraphNode[] = [
     { id: "1", label: "Goldman Sachs", type: "company", x: 100, y: 100 },
     { id: "2", label: "JPMorgan Chase", type: "company", x: 300, y: 150 },
@@ -55,8 +58,14 @@ export function GraphVisualization({
     { id: "e4", source: "1", target: "2", label: "competitor", type: "COMPETES_WITH" },
   ];
 
-  const displayNodes = nodes.length > 0 ? nodes : mockNodes;
-  const displayEdges = edges.length > 0 ? edges : mockEdges;
+  // Always use real data when provided, fall back to mock only initially
+  const displayNodes = hasRealData ? nodes : (nodes !== undefined ? [] : mockNodes);
+  const displayEdges = hasRealData ? edges : (edges !== undefined ? [] : mockEdges);
+  
+  // Reset selection when nodes change
+  useEffect(() => {
+    setSelectedNode(null);
+  }, [nodes, edges]);
 
   const getNodeColor = (type: string) => {
     switch (type) {

@@ -194,6 +194,73 @@ export class PuppyGraphClient {
         }
       }
 
+      // Handle direct Rating queries
+      if (queryAnalysis.entities.includes('Rating') && !queryAnalysis.entities.includes('Company')) {
+        // Get all ratings (without company filter)
+        const allRatings = await storage.getRatings();
+        const limitedRatings = allRatings.slice(0, 20); // Limit to 20 for performance
+        
+        const companyIds = new Set<string>();
+        
+        for (const rating of limitedRatings) {
+          // Add rating node
+          nodes.push({
+            id: rating.id,
+            label: 'Rating',
+            properties: {
+              rating: rating.rating,
+              rating_agency: rating.ratingAgency,
+              rating_type: rating.ratingType,
+              valid_from: rating.validFrom,
+              valid_to: rating.validTo
+            }
+          });
+
+          // Track company IDs for batch fetching
+          if (rating.companyId) {
+            companyIds.add(rating.companyId);
+          }
+        }
+
+        // Fetch all unique companies in batch
+        if (companyIds.size > 0) {
+          const companies = await storage.getCompanies(undefined, 50);
+          const companyMap = new Map(companies.map(c => [c.id, c]));
+          
+          for (const rating of limitedRatings) {
+            if (rating.companyId) {
+              const company = companyMap.get(rating.companyId);
+              if (company) {
+                // Add company node if not already added
+                if (!nodes.find(n => n.id === company.id)) {
+                  nodes.push({
+                    id: company.id,
+                    label: 'Company',
+                    properties: {
+                      name: company.name,
+                      ticker: company.ticker,
+                      sector: company.sector,
+                      industry: company.industry,
+                      market_cap: company.marketCap,
+                      founded_year: company.foundedYear,
+                      headquarters: company.headquarters
+                    }
+                  });
+                }
+
+                edges.push({
+                  id: `rating_${rating.id}`,
+                  fromId: company.id,
+                  toId: rating.id,
+                  label: 'HAS_RATING',
+                  properties: {}
+                });
+              }
+            }
+          }
+        }
+      }
+
       const executionTime = Date.now() - startTime;
       
       return {
