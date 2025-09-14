@@ -34,6 +34,14 @@ export interface IStorage {
   getRatings(companyId?: string): Promise<Rating[]>;
   getTransactions(limit?: number): Promise<Transaction[]>;
   getRegulatoryEvents(companyId?: string): Promise<RegulatoryEvent[]>;
+  
+  // Metrics methods
+  getMetrics(): Promise<{
+    totalEntities: number;
+    activeRelationships: number;
+    temporalEvents: number;
+    aiQueriesProcessed: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -141,6 +149,62 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await query;
+  }
+
+  async getMetrics(): Promise<{
+    totalEntities: number;
+    activeRelationships: number;
+    temporalEvents: number;
+    aiQueriesProcessed: number;
+  }> {
+    // Get counts for all entity types
+    const [
+      companyCount,
+      personCount,
+      ratingCount,
+      transactionCount,
+      regulatoryEventCount,
+      employmentCount,
+      queryCount
+    ] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(companies),
+      db.select({ count: sql<number>`count(*)` }).from(people),
+      db.select({ count: sql<number>`count(*)` }).from(ratings),
+      db.select({ count: sql<number>`count(*)` }).from(transactions),
+      db.select({ count: sql<number>`count(*)` }).from(regulatoryEvents),
+      db.select({ count: sql<number>`count(*)` }).from(employments),
+      db.select({ count: sql<number>`count(*)` }).from(queryHistory)
+    ]);
+
+    // Calculate total entities (companies + people + ratings + transactions + regulatory events)
+    const totalEntities = 
+      companyCount[0].count + 
+      personCount[0].count + 
+      ratingCount[0].count + 
+      transactionCount[0].count + 
+      regulatoryEventCount[0].count;
+
+    // Active relationships (employments + ratings + transactions + regulatory events)
+    const activeRelationships = 
+      employmentCount[0].count + 
+      ratingCount[0].count + 
+      transactionCount[0].count + 
+      regulatoryEventCount[0].count;
+
+    // Temporal events (regulatory events + transactions with dates)
+    const temporalEvents = 
+      regulatoryEventCount[0].count + 
+      transactionCount[0].count;
+
+    // AI queries processed (from query history)
+    const aiQueriesProcessed = queryCount[0].count;
+
+    return {
+      totalEntities,
+      activeRelationships,
+      temporalEvents,
+      aiQueriesProcessed
+    };
   }
 }
 

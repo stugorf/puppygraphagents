@@ -48,7 +48,7 @@ stop:
     -pkill -f "tsx server/index.ts" || true
     -lsof -ti:{{ DEV_PORT }} | xargs -r kill -9 || true
     @echo "🐳 Stopping Docker services..."
-    docker-compose down
+    -docker-compose down || echo "⚠️  Docker not running or no containers to stop"
     @echo "✅ Application stopped"
 
 # Restart the application

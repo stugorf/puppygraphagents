@@ -15,36 +15,45 @@ dspy.configure(lm=dspy.LM(
 ))
 
 class FinancialKnowledgeGraph(dspy.Signature):
-    """Convert natural language queries about financial entities into Cypher queries for a knowledge graph.
+    """Convert natural language queries about financial entities into openCypher queries for PuppyGraph.
     
     The knowledge graph contains:
-    - Companies (name, ticker, sector, industry, market_cap, founded_year, headquarters)
-    - People (name, title, age, nationality, education) 
-    - Employments (person-company relationships with positions, start_date, end_date, salary)
-    - Ratings (credit ratings by agencies with rating, rating_agency, valid_from, valid_to)
-    - Transactions (mergers, acquisitions with type, value, status, announced_date, completed_date)
-    - RegulatoryEvents (fines, investigations with event_type, regulator, amount, event_date, status)
+    - Company nodes (name, ticker, sector, industry, market_cap, founded_year, headquarters)
+    - Person nodes (name, title, age, nationality, education) 
+    - Rating nodes (rating, rating_agency, rating_type, valid_from, valid_to)
+    - Transaction nodes (type, value, currency, status, announced_date, completed_date, description)
+    - RegulatoryEvent nodes (event_type, regulator, description, amount, currency, event_date, resolution_date, status)
     
-    Generate precise Cypher queries that answer the user's question about financial relationships and temporal patterns.
+    Relationships:
+    - EMPLOYED_BY: Person -> Company (with position, start_date, end_date, salary)
+    - HAS_RATING: Company -> Rating
+    - PARTICIPATES_IN: Company -> Transaction (as acquirer)
+    - TARGET_OF: Company -> Transaction (as target)
+    - SUBJECT_TO: Company -> RegulatoryEvent
+    
+    Generate precise openCypher queries that work with PuppyGraph's openCypher implementation.
+    Use MATCH, RETURN, WHERE, ORDER BY, LIMIT clauses. Return both nodes and relationships when needed.
     """
     
     natural_query: str = dspy.InputField(desc="Natural language query about financial entities and relationships")
-    cypher_query: str = dspy.OutputField(desc="Cypher query that retrieves the requested information from the financial knowledge graph")
+    cypher_query: str = dspy.OutputField(desc="openCypher query that retrieves the requested information from the financial knowledge graph")
     reasoning: str = dspy.OutputField(desc="Brief explanation of how the query maps to the graph structure")
 
 class TemporalFinancialQuery(dspy.Signature):
-    """Convert temporal financial queries into time-aware Cypher queries.
+    """Convert temporal financial queries into time-aware openCypher queries for PuppyGraph.
     
     Handle queries involving:
     - Time ranges (e.g., "in 2023", "last quarter", "since 2020")
     - Temporal relationships (e.g., "before merger", "after CEO change")
     - Historical comparisons (e.g., "rating changes over time")
     - Event sequences (e.g., "mergers followed by regulatory actions")
+    
+    Use proper date/time filtering with WHERE clauses and temporal properties.
     """
     
     natural_query: str = dspy.InputField(desc="Temporal natural language query about financial events or relationships")
     time_context: str = dspy.InputField(desc="Extracted time context and temporal constraints")
-    cypher_query: str = dspy.OutputField(desc="Time-aware Cypher query with proper temporal filtering")
+    cypher_query: str = dspy.OutputField(desc="Time-aware openCypher query with proper temporal filtering")
     temporal_reasoning: str = dspy.OutputField(desc="Explanation of temporal logic and filtering approach")
 
 class QueryAgent(dspy.Module):
@@ -55,7 +64,7 @@ class QueryAgent(dspy.Module):
         self.financial_converter = dspy.ChainOfThought(FinancialKnowledgeGraph)
         self.temporal_converter = dspy.ChainOfThought(TemporalFinancialQuery)
         
-        # Schema context for the agent
+        # Schema context for PuppyGraph openCypher
         self.schema_context = {
             "nodes": {
                 "Company": ["id", "name", "ticker", "sector", "industry", "market_cap", "founded_year", "headquarters"],
@@ -65,11 +74,17 @@ class QueryAgent(dspy.Module):
                 "RegulatoryEvent": ["id", "event_type", "regulator", "description", "amount", "event_date", "resolution_date", "status"]
             },
             "relationships": {
-                "HAS_EXECUTIVE": "Company -> Person (via employments table)",
-                "HAS_RATING": "Company -> Rating", 
-                "PARTICIPATES_IN": "Company -> Transaction",
-                "SUBJECT_TO": "Company -> RegulatoryEvent",
-                "WORKS_FOR": "Person -> Company (via employments table)"
+                "EMPLOYED_BY": "Person -[EMPLOYED_BY]-> Company (with position, start_date, end_date, salary)",
+                "HAS_RATING": "Company -[HAS_RATING]-> Rating", 
+                "PARTICIPATES_IN": "Company -[PARTICIPATES_IN]-> Transaction (as acquirer)",
+                "TARGET_OF": "Company -[TARGET_OF]-> Transaction (as target)",
+                "SUBJECT_TO": "Company -[SUBJECT_TO]-> RegulatoryEvent"
+            },
+            "query_patterns": {
+                "basic_match": "MATCH (n:NodeType) RETURN n",
+                "with_relationships": "MATCH (n:NodeType)-[r:RELATIONSHIP]->(m:NodeType) RETURN n, r, m",
+                "with_filters": "MATCH (n:NodeType) WHERE n.property = 'value' RETURN n",
+                "with_ordering": "MATCH (n:NodeType) RETURN n ORDER BY n.property DESC LIMIT 10"
             }
         }
     
@@ -141,7 +156,7 @@ class QueryAgent(dspy.Module):
             }
 
 class MultiHopAgent(dspy.Module):
-    """DSPy agent for multi-hop reasoning across the knowledge graph."""
+    """DSPy agent for multi-hop reasoning across the knowledge graph using openCypher."""
     
     def __init__(self):
         super().__init__()
@@ -150,18 +165,45 @@ class MultiHopAgent(dspy.Module):
         )
     
     def forward(self, question: str, max_hops: int = 3) -> Dict[str, Any]:
-        """Plan and execute multi-hop queries."""
+        """Plan and execute multi-hop queries using openCypher."""
         try:
-            # For now, return a simple multi-hop structure
-            # This will be enhanced when we integrate with PuppyGraph
+            # Generate multi-hop openCypher queries
+            hops = []
+            reasoning = f"Planning {max_hops}-hop query for: {question}"
+            
+            if "company" in question.lower() and "executive" in question.lower():
+                hops = [
+                    "Find companies matching criteria",
+                    "Find executives through EMPLOYED_BY relationships",
+                    "Return company-executive pairs with details"
+                ]
+                final_query = "MATCH (c:Company)-[e:EMPLOYED_BY]->(p:Person) RETURN c, e, p"
+            elif "transaction" in question.lower() and "company" in question.lower():
+                hops = [
+                    "Find companies in specified criteria",
+                    "Find transactions through PARTICIPATES_IN and TARGET_OF relationships",
+                    "Return company-transaction relationships"
+                ]
+                final_query = "MATCH (c:Company)-[r:PARTICIPATES_IN|TARGET_OF]->(t:Transaction) RETURN c, r, t"
+            elif "rating" in question.lower():
+                hops = [
+                    "Find companies with ratings",
+                    "Filter by rating criteria",
+                    "Return company-rating relationships"
+                ]
+                final_query = "MATCH (c:Company)-[r:HAS_RATING]->(rt:Rating) RETURN c, r, rt"
+            else:
+                hops = [
+                    "Find initial entities",
+                    "Explore connected entities",
+                    "Aggregate results"
+                ]
+                final_query = "MATCH (n) RETURN n LIMIT 100"
+            
             return {
-                "hops": [
-                    "Find target companies/entities",
-                    "Explore relationships and connections", 
-                    "Aggregate insights across connections"
-                ],
-                "reasoning": "Multi-hop query planned",
-                "final_query": f"Multi-hop exploration for: {question}"
+                "hops": hops,
+                "reasoning": reasoning,
+                "final_query": final_query
             }
         except Exception as e:
             return {
@@ -238,13 +280,16 @@ def process_temporal_query(natural_query: str, start_date: Optional[str] = None,
         return result
 
 if __name__ == "__main__":
-    # Test the agent
+    # Test the agent with openCypher queries
     test_queries = [
         "Show me all companies in the financial services sector",
         "Who are the CEOs of major banks?",
         "What mergers happened in 2023?",
         "Find companies with credit rating downgrades since 2024",
-        "Show me regulatory fines above $1 billion"
+        "Show me regulatory fines above $1 billion",
+        "Find all people employed by companies in the technology sector",
+        "Show me transactions between companies in the same industry",
+        "Find companies that have both ratings and regulatory events"
     ]
     
     print("🤖 Testing DSPy Financial Query Agent")

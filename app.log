@@ -2,11 +2,59 @@
 > rest-express@1.0.0 dev
 > NODE_ENV=development tsx server/index.ts
 
-8:20:19 AM [express] serving on port 5000
-Connected to PuppyGraph on port 8081
-PuppyGraph client initialized: Connected to PuppyGraph
+Failed to connect to PuppyGraph: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+PuppyGraph client initialization failed, continuing without graph functionality: PuppyGraph connection failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+9:44:56 AM [express] serving on port 5000
 Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
 
 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+9:44:57 AM [express] GET /api/metrics 304 in 25ms :: {"totalEntities":"1010645","activeRelationships…
+Error getting graph status: Error: PuppyGraph client is not connected. Please ensure PuppyGraph service is running.
+    at PuppyGraphClient.getGraphSchema (/Users/davidhughes/dev/puppygraphagents/server/graph/puppygraph_client.ts:154:13)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/routes.ts:348:45)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/index.ts:49:3)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at urlencodedParser (/Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/types/urlencoded.js:94:7)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at jsonParser (/Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/types/json.js:113:7)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at expressInit (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/middleware/init.js:40:5)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at query (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/middleware/query.js:45:5)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at Function.handle (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:175:3)
+    at Function.handle (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/application.js:181:10)
+    at Server.app (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/express.js:39:9)
+    at Server.emit (node:events:507:28)
+    at parserOnIncoming (node:_http_server:1153:12)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:117:17)
+9:45:13 AM [express] GET /api/graph/status 500 in 3ms :: {"error":"Failed to get graph status","deta…

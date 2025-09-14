@@ -20,6 +20,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Metrics endpoint
+  app.get("/api/metrics", async (req, res) => {
+    try {
+      const metrics = await storage.getMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching metrics:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch metrics",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Test PuppyGraph queries for metrics
+  app.get("/api/metrics/puppygraph", async (req, res) => {
+    try {
+      const isConnected = await puppyGraphClient.isConnected();
+      if (!isConnected) {
+        return res.status(503).json({ 
+          error: "PuppyGraph not connected",
+          details: "PuppyGraph service is not available"
+        });
+      }
+
+      // Test queries to get actual counts from PuppyGraph
+      const testQueries = [
+        "MATCH (n) RETURN count(n) as total_nodes",
+        "MATCH ()-[r]->() RETURN count(r) as total_edges",
+        "MATCH (n:Company) RETURN count(n) as companies",
+        "MATCH (n:Person) RETURN count(n) as people"
+      ];
+
+      const results = await Promise.all(
+        testQueries.map(async (query) => {
+          try {
+            const result = await puppyGraphClient.executeQuery(query);
+            return { query, success: true, result };
+          } catch (error) {
+            return { query, success: false, error: error instanceof Error ? error.message : "Unknown error" };
+          }
+        })
+      );
+
+      res.json({
+        puppygraph_connected: true,
+        test_results: results
+      });
+    } catch (error) {
+      console.error("Error testing PuppyGraph metrics:", error);
+      res.status(500).json({ 
+        error: "Failed to test PuppyGraph metrics",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // DSPy Agent Query Processing
   app.post("/api/query/natural", async (req, res) => {
     try {

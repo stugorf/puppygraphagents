@@ -21,7 +21,8 @@ export class DSPyAgent {
   private agentPath: string;
 
   constructor() {
-    this.pythonPath = path.join(process.cwd(), '.pythonlibs', 'bin', 'python');
+    // Use system Python instead of .pythonlibs
+    this.pythonPath = 'python3';
     this.agentPath = path.join(process.cwd(), 'server', 'agents', 'dspy_agent.py');
   }
 
@@ -30,7 +31,7 @@ export class DSPyAgent {
       const python = spawn(this.pythonPath, ['-c', script], {
         env: {
           ...process.env,
-          PYTHONPATH: path.join(process.cwd(), '.pythonlibs', 'lib', 'python3.11', 'site-packages')
+          PYTHONPATH: process.env.PYTHONPATH || ''
         }
       });
 

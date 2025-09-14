@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Activity, Database, Brain, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface MetricData {
   title: string;
@@ -25,8 +26,72 @@ interface MetricsCardsProps {
   queryResult?: QueryResult | null;
 }
 
+interface ApiMetrics {
+  totalEntities: number;
+  activeRelationships: number;
+  temporalEvents: number;
+  aiQueriesProcessed: number;
+}
+
 export function MetricsCards({ metrics, queryResult }: MetricsCardsProps) {
-  // Mock data for demonstration - todo: remove mock functionality
+  const [apiMetrics, setApiMetrics] = useState<ApiMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const response = await fetch('/api/metrics');
+        if (response.ok) {
+          const data = await response.json();
+          setApiMetrics(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, []);
+
+  // Convert API metrics to display format
+  const apiMetricsData: MetricData[] = apiMetrics ? [
+    {
+      title: "Total Entities",
+      value: apiMetrics.totalEntities.toLocaleString(),
+      change: undefined, // No change data from API yet
+      trend: undefined,
+      icon: Database,
+      description: "Companies, executives, and transactions"
+    },
+    {
+      title: "Active Relationships",
+      value: apiMetrics.activeRelationships.toLocaleString(),
+      change: undefined,
+      trend: undefined,
+      icon: Activity,
+      description: "Current valid connections in graph"
+    },
+    {
+      title: "Temporal Events",
+      value: apiMetrics.temporalEvents.toLocaleString(),
+      change: undefined,
+      trend: undefined,
+      icon: Clock,
+      description: "Time-stamped changes this month"
+    },
+    {
+      title: "AI Queries Processed",
+      value: apiMetrics.aiQueriesProcessed.toLocaleString(),
+      change: undefined,
+      trend: undefined,
+      icon: Brain,
+      description: "Natural language queries today"
+    }
+  ] : [];
+
+  // Mock data for demonstration - fallback when API fails
   const defaultMetrics: MetricData[] = [
     {
       title: "Total Entities",
@@ -62,7 +127,7 @@ export function MetricsCards({ metrics, queryResult }: MetricsCardsProps) {
     }
   ];
 
-  const displayMetrics = metrics || defaultMetrics;
+  const displayMetrics = metrics || (apiMetrics ? apiMetricsData : defaultMetrics);
 
   const getTrendIcon = (trend?: string) => {
     switch (trend) {
@@ -79,6 +144,29 @@ export function MetricsCards({ metrics, queryResult }: MetricsCardsProps) {
       default: return 'text-muted-foreground';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((index) => (
+          <Card key={index} className="hover-elevate">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="h-4 bg-muted animate-pulse rounded w-24"></div>
+                <div className="w-4 h-4 bg-muted animate-pulse rounded"></div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="h-8 bg-muted animate-pulse rounded w-20"></div>
+                <div className="h-3 bg-muted animate-pulse rounded w-32"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

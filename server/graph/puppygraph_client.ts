@@ -1,4 +1,5 @@
 import axios from 'axios';
+import neo4j from 'neo4j-driver';
 
 export interface GraphNode {
   id: string;
@@ -30,67 +31,48 @@ export interface PuppyGraphConfig {
 
 export class PuppyGraphClient {
   private config: PuppyGraphConfig;
+  private driver: neo4j.Driver | null = null;
   private isConnected: boolean = false;
 
   constructor(config: Partial<PuppyGraphConfig> = {}) {
     this.config = {
-      baseUrl: config.baseUrl || 'http://localhost:8082',
-      username: config.username || 'puppygraph',
-      password: config.password || 'puppygraph123',
+      baseUrl: config.baseUrl || process.env.PUPPYGRAPH_URL || 'http://localhost:8081',
+      username: config.username || process.env.PUPPYGRAPH_USERNAME || 'puppygraph',
+      password: config.password || process.env.PUPPYGRAPH_PASSWORD || 'puppygraph123',
       timeout: config.timeout || 30000
     };
   }
 
   async connect(): Promise<boolean> {
     try {
-      // Test connection to PuppyGraph - try multiple endpoints and ports
-      const endpoints = [
-        { url: 'http://localhost:8081/api/health', port: 8081 },
-        { url: 'http://localhost:8081/health', port: 8081 },
-        { url: 'http://localhost:8082/api/health', port: 8082 },
-        { url: 'http://localhost:8082/health', port: 8082 },
-        { url: 'http://localhost:8081/', port: 8081 },
-        { url: 'http://localhost:8082/', port: 8082 }
-      ];
-      let connected = false;
+      // Connect to PuppyGraph using Bolt protocol on port 7687
+      const uri = 'bolt://localhost:7687';
+      this.driver = neo4j.driver(uri, neo4j.auth.basic(this.config.username, this.config.password), {
+        encrypted: false, // Disable encryption for PuppyGraph
+        trust: 'TRUST_ALL_CERTIFICATES'
+      });
       
-      for (const endpoint of endpoints) {
-        try {
-          const response = await axios.get(endpoint.url, {
-            timeout: 5000,
-            auth: {
-              username: this.config.username,
-              password: this.config.password
-            }
-          });
-          
-          if (response.status === 200) {
-            // Update the base URL to the working port
-            this.config.baseUrl = `http://localhost:${endpoint.port}`;
-            connected = true;
-            console.log(`Connected to PuppyGraph on port ${endpoint.port}`);
-            break;
-          }
-        } catch (e) {
-          // Try next endpoint
-          continue;
-        }
-      }
+      // Test the connection
+      const session = this.driver.session();
+      await session.run('RETURN 1 as test');
+      await session.close();
       
-      this.isConnected = connected;
-      if (!this.isConnected) {
-        throw new Error('PuppyGraph is not responding on any known endpoint');
-      }
+      this.isConnected = true;
+      console.log('Connected to PuppyGraph via Bolt protocol on port 7687');
       return this.isConnected;
     } catch (error) {
       console.error('Failed to connect to PuppyGraph:', error instanceof Error ? error.message : 'Unknown error');
       this.isConnected = false;
+      if (this.driver) {
+        await this.driver.close();
+        this.driver = null;
+      }
       throw new Error(`PuppyGraph connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   async executeCypherQuery(cypherQuery: string): Promise<GraphQueryResult> {
-    if (!this.isConnected) {
+    if (!this.isConnected || !this.driver) {
       throw new Error('PuppyGraph client is not connected. Please ensure PuppyGraph service is running.');
     }
     
@@ -99,36 +81,51 @@ export class PuppyGraphClient {
   }
 
   private async executeCypherOnPuppyGraph(cypherQuery: string, startTime: number): Promise<GraphQueryResult> {
-    try {
-      const response = await axios.post(
-        `${this.config.baseUrl}/api/cypher`,
-        {
-          query: cypherQuery
-        },
-        {
-          timeout: this.config.timeout,
-          auth: {
-            username: this.config.username,
-            password: this.config.password
-          },
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+    if (!this.driver) {
+      throw new Error('PuppyGraph driver is not initialized');
+    }
 
+    const session = this.driver.session();
+    try {
+      const result = await session.run(cypherQuery);
       const executionTime = Date.now() - startTime;
       
-      // Transform PuppyGraph response to our format
+      // Transform Neo4j result to our format
+      const nodes: GraphNode[] = [];
+      const edges: GraphEdge[] = [];
+      
+      result.records.forEach(record => {
+        record.keys.forEach(key => {
+          const value = record.get(key);
+          if (neo4j.isNode(value)) {
+            nodes.push({
+              id: value.elementId,
+              label: value.labels[0] || 'Unknown',
+              properties: value.properties
+            });
+          } else if (neo4j.isRelationship(value)) {
+            edges.push({
+              id: value.elementId,
+              fromId: value.startNodeElementId,
+              toId: value.endNodeElementId,
+              label: value.type,
+              properties: value.properties
+            });
+          }
+        });
+      });
+      
       return {
-        nodes: this.transformPuppyGraphNodes(response.data.nodes || []),
-        edges: this.transformPuppyGraphEdges(response.data.edges || []),
+        nodes,
+        edges,
         executionTime,
         cypherQuery
       };
     } catch (error) {
       console.error('Error executing Cypher on PuppyGraph:', error);
       throw new Error(`PuppyGraph query failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      await session.close();
     }
   }
 
@@ -158,7 +155,8 @@ export class PuppyGraphClient {
     }
     
     try {
-      const response = await axios.get(`${this.config.baseUrl}/api/schema`, {
+      // Use HTTP endpoint for schema since it's not available via Bolt
+      const response = await axios.get(`${this.config.baseUrl}/schemajson`, {
         timeout: this.config.timeout,
         auth: {
           username: this.config.username,
@@ -179,9 +177,17 @@ export class PuppyGraphClient {
   getStatus(): { connected: boolean; mode: string; endpoint?: string } {
     return {
       connected: this.isConnected,
-      mode: 'puppygraph',
-      endpoint: this.isConnected ? this.config.baseUrl : undefined
+      mode: 'puppygraph-bolt',
+      endpoint: this.isConnected ? 'bolt://localhost:7687' : undefined
     };
+  }
+
+  async close(): Promise<void> {
+    if (this.driver) {
+      await this.driver.close();
+      this.driver = null;
+      this.isConnected = false;
+    }
   }
 }
 
