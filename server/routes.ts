@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { dspyAgent } from "./agents/dspy_wrapper";
+import { puppyGraphClient } from "./graph/puppygraph_client";
 import { insertQueryHistorySchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -164,6 +165,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         status: "error", 
         error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Graph Query Endpoints (PuppyGraph integration)
+  app.post("/api/graph/query", async (req, res) => {
+    try {
+      const { cypher_query } = req.body;
+      
+      if (!cypher_query || typeof cypher_query !== 'string') {
+        return res.status(400).json({ error: "cypher_query is required and must be a string" });
+      }
+
+      console.log(`Executing graph query: ${cypher_query}`);
+      const result = await puppyGraphClient.executeCypherQuery(cypher_query);
+
+      res.json({
+        success: true,
+        ...result
+      });
+
+    } catch (error) {
+      console.error("Error executing graph query:", error);
+      res.status(500).json({ 
+        error: "Failed to execute graph query",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Combined Natural Language to Graph Query
+  app.post("/api/graph/natural", async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Query is required and must be a string" });
+      }
+
+      console.log(`Processing natural language to graph query: ${query}`);
+      const startTime = Date.now();
+      
+      // Step 1: Convert natural language to Cypher using DSPy
+      const dspyResult = await dspyAgent.processNaturalQuery(query);
+      
+      if (dspyResult.query_type === 'error' || !dspyResult.cypher_query) {
+        return res.status(400).json({
+          error: "Failed to generate Cypher query",
+          details: dspyResult.reasoning,
+          dsph_error: dspyResult.error
+        });
+      }
+
+      // Step 2: Execute the generated Cypher on the graph
+      const graphResult = await puppyGraphClient.executeCypherQuery(dspyResult.cypher_query);
+      
+      const totalExecutionTime = Date.now() - startTime;
+
+      // Save to query history
+      try {
+        await storage.insertQueryHistory({
+          originalQuery: query,
+          queryType: "natural",
+          generatedCypher: dspyResult.cypher_query,
+          results: { 
+            reasoning: dspyResult.reasoning, 
+            nodes_count: graphResult.nodes.length,
+            edges_count: graphResult.edges.length,
+            graph_execution_time: graphResult.executionTime
+          },
+          executionTime: totalExecutionTime
+        });
+      } catch (historyError) {
+        console.warn("Failed to save query history:", historyError);
+      }
+
+      res.json({
+        success: true,
+        query_type: dspyResult.query_type,
+        cypher_query: dspyResult.cypher_query,
+        reasoning: dspyResult.reasoning,
+        time_context: dspyResult.time_context,
+        nodes: graphResult.nodes,
+        edges: graphResult.edges,
+        graph_execution_time: graphResult.executionTime,
+        total_execution_time: totalExecutionTime
+      });
+
+    } catch (error) {
+      console.error("Error processing natural language graph query:", error);
+      res.status(500).json({ 
+        error: "Failed to process natural language graph query",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Graph Status and Schema
+  app.get("/api/graph/status", async (req, res) => {
+    try {
+      const status = puppyGraphClient.getStatus();
+      const schema = await puppyGraphClient.getGraphSchema();
+      
+      res.json({
+        ...status,
+        schema,
+        ready: puppyGraphClient.isReady()
+      });
+    } catch (error) {
+      console.error("Error getting graph status:", error);
+      res.status(500).json({ 
+        error: "Failed to get graph status",
+        details: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });

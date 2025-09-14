@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  puppygraph:
+    image: puppygraph/puppygraph:stable
+    container_name: puppygraph
+    pull_policy: always
+    environment:
+      - PUPPYGRAPH_USERNAME=puppygraph
+      - PUPPYGRAPH_PASSWORD=puppygraph123
+    networks:
+      - graph_network
+    ports:
+      - "8081:8081"  # Web UI
+      - "8182:8182"  # Gremlin
+      - "7687:7687"  # Neo4j Bolt
+    restart: unless-stopped
+    volumes:
+      - ./puppygraph-config:/puppygraph/conf
+      - puppygraph-data:/puppygraph/data
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: temporal_graph_postgres
+    environment:
+      - POSTGRES_DB=temporal_graph
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+    networks:
+      - graph_network
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  graph_network:
+    driver: bridge
+    name: temporal-graph-network
+
+volumes:
+  postgres_data:
+    name: temporal-graph-postgres-data
+  puppygraph-data:
+    name: temporal-graph-puppygraph-data

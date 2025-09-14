@@ -1,0 +1,447 @@
+{
+  "catalogs": [
+    {
+      "name": "temporal_graph_db",
+      "type": "postgresql",
+      "jdbc": {
+        "username": "postgres",
+        "password": "postgres123",
+        "jdbcUri": "jdbc:postgresql://postgres:5432/temporal_graph",
+        "driverClass": "org.postgresql.Driver"
+      }
+    }
+  ],
+  "graph": {
+    "vertices": [
+      {
+        "label": "Company",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "temporal_graph_db",
+            "schema": "public",
+            "table": "companies"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "type": "String",
+              "field": "name",
+              "alias": "name"
+            },
+            {
+              "type": "String",
+              "field": "ticker",
+              "alias": "ticker"
+            },
+            {
+              "type": "String",
+              "field": "sector",
+              "alias": "sector"
+            },
+            {
+              "type": "String",
+              "field": "industry",
+              "alias": "industry"
+            },
+            {
+              "type": "String",
+              "field": "market_cap",
+              "alias": "market_cap"
+            },
+            {
+              "type": "Int",
+              "field": "founded_year",
+              "alias": "founded_year"
+            },
+            {
+              "type": "String",
+              "field": "headquarters",
+              "alias": "headquarters"
+            }
+          ]
+        }
+      },
+      {
+        "label": "Person",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "temporal_graph_db",
+            "schema": "public",
+            "table": "people"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "type": "String",
+              "field": "name",
+              "alias": "name"
+            },
+            {
+              "type": "String",
+              "field": "title",
+              "alias": "title"
+            },
+            {
+              "type": "Int",
+              "field": "age",
+              "alias": "age"
+            },
+            {
+              "type": "String",
+              "field": "nationality",
+              "alias": "nationality"
+            },
+            {
+              "type": "String",
+              "field": "education",
+              "alias": "education"
+            }
+          ]
+        }
+      },
+      {
+        "label": "Rating",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "temporal_graph_db",
+            "schema": "public",
+            "table": "ratings"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "type": "String",
+              "field": "rating",
+              "alias": "rating"
+            },
+            {
+              "type": "String",
+              "field": "rating_agency",
+              "alias": "rating_agency"
+            },
+            {
+              "type": "String",
+              "field": "rating_type",
+              "alias": "rating_type"
+            },
+            {
+              "type": "String",
+              "field": "valid_from",
+              "alias": "valid_from"
+            },
+            {
+              "type": "String",
+              "field": "valid_to",
+              "alias": "valid_to"
+            }
+          ]
+        }
+      },
+      {
+        "label": "Transaction",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "temporal_graph_db",
+            "schema": "public",
+            "table": "transactions"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "type": "String",
+              "field": "type",
+              "alias": "type"
+            },
+            {
+              "type": "String",
+              "field": "value",
+              "alias": "value"
+            },
+            {
+              "type": "String",
+              "field": "currency",
+              "alias": "currency"
+            },
+            {
+              "type": "String",
+              "field": "status",
+              "alias": "status"
+            },
+            {
+              "type": "String",
+              "field": "announced_date",
+              "alias": "announced_date"
+            },
+            {
+              "type": "String",
+              "field": "completed_date",
+              "alias": "completed_date"
+            },
+            {
+              "type": "String",
+              "field": "description",
+              "alias": "description"
+            }
+          ]
+        }
+      },
+      {
+        "label": "RegulatoryEvent",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "temporal_graph_db",
+            "schema": "public",
+            "table": "regulatory_events"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            {
+              "type": "String",
+              "field": "event_type",
+              "alias": "event_type"
+            },
+            {
+              "type": "String",
+              "field": "regulator",
+              "alias": "regulator"
+            },
+            {
+              "type": "String",
+              "field": "description",
+              "alias": "description"
+            },
+            {
+              "type": "String",
+              "field": "amount",
+              "alias": "amount"
+            },
+            {
+              "type": "String",
+              "field": "currency",
+              "alias": "currency"
+            },
+            {
+              "type": "String",
+              "field": "event_date",
+              "alias": "event_date"
+            },
+            {
+              "type": "String",
+              "field": "resolution_date",
+              "alias": "resolution_date"
+            },
+            {
+              "type": "String",
+              "field": "status",
+              "alias": "status"
+            }
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "label": "EMPLOYED_BY",
+        "fromVertex": "Person",
+        "toVertex": "Company",
+        "tableSource": {
+          "catalog": "temporal_graph_db",
+          "schema": "public",
+          "table": "employments"
+        },
+        "fromId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "person_id",
+              "alias": "person_id"
+            }
+          ]
+        },
+        "toId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "company_id",
+              "alias": "company_id"
+            }
+          ]
+        },
+        "attributes": [
+          {
+            "type": "String",
+            "field": "position",
+            "alias": "position"
+          },
+          {
+            "type": "String",
+            "field": "start_date",
+            "alias": "start_date"
+          },
+          {
+            "type": "String",
+            "field": "end_date",
+            "alias": "end_date"
+          },
+          {
+            "type": "String",
+            "field": "salary",
+            "alias": "salary"
+          }
+        ]
+      },
+      {
+        "label": "HAS_RATING",
+        "fromVertex": "Company",
+        "toVertex": "Rating",
+        "tableSource": {
+          "catalog": "temporal_graph_db",
+          "schema": "public",
+          "table": "ratings"
+        },
+        "fromId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "company_id",
+              "alias": "company_id"
+            }
+          ]
+        },
+        "toId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "id",
+              "alias": "id"
+            }
+          ]
+        }
+      },
+      {
+        "label": "PARTICIPATES_IN",
+        "fromVertex": "Company",
+        "toVertex": "Transaction",
+        "tableSource": {
+          "catalog": "temporal_graph_db",
+          "schema": "public",
+          "table": "transactions"
+        },
+        "fromId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "acquirer_id",
+              "alias": "acquirer_id"
+            }
+          ]
+        },
+        "toId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "id",
+              "alias": "id"
+            }
+          ]
+        }
+      },
+      {
+        "label": "TARGET_OF",
+        "fromVertex": "Company",
+        "toVertex": "Transaction",
+        "tableSource": {
+          "catalog": "temporal_graph_db",
+          "schema": "public",
+          "table": "transactions"
+        },
+        "fromId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "target_id",
+              "alias": "target_id"
+            }
+          ]
+        },
+        "toId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "id",
+              "alias": "id"
+            }
+          ]
+        }
+      },
+      {
+        "label": "SUBJECT_TO",
+        "fromVertex": "Company",
+        "toVertex": "RegulatoryEvent",
+        "tableSource": {
+          "catalog": "temporal_graph_db",
+          "schema": "public",
+          "table": "regulatory_events"
+        },
+        "fromId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "company_id",
+              "alias": "company_id"
+            }
+          ]
+        },
+        "toId": {
+          "fields": [
+            {
+              "type": "String",
+              "field": "id",
+              "alias": "id"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
