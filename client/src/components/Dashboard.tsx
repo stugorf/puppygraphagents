@@ -41,6 +41,7 @@ export function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("query");
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const [lastQuery, setLastQuery] = useState<string>("");
+  const [isGraphExpanded, setIsGraphExpanded] = useState(false);
   const [temporalParams, setTemporalParams] = useState<{
     startDate?: string;
     endDate?: string;
@@ -76,8 +77,7 @@ export function Dashboard() {
 
   const handleNodeClick = (node: any) => {
     console.log('Node clicked:', node);
-    // Simulate switching to data view to show details
-    setSelectedTab("data");
+    // Don't switch tabs - let the GraphVisualization handle the click
   };
 
   const handleRowClick = (record: any) => {
@@ -97,6 +97,11 @@ export function Dashboard() {
   const handleGranularityChange = (granularity: string) => {
     console.log('Granularity changed:', granularity);
     setTemporalParams(prev => ({ ...prev, granularity }));
+  };
+
+  const handleExpandGraph = () => {
+    setIsGraphExpanded(true);
+    setSelectedTab("graph");
   };
 
   return (
@@ -145,7 +150,9 @@ export function Dashboard() {
                       <GraphVisualization 
                         nodes={queryResult?.nodes} 
                         edges={queryResult?.edges}
-                        onNodeClick={handleNodeClick} 
+                        onNodeClick={handleNodeClick}
+                        isExpanded={isGraphExpanded}
+                        onExpand={handleExpandGraph}
                       />
                     </div>
                   </div>
@@ -156,7 +163,9 @@ export function Dashboard() {
                     <GraphVisualization 
                       nodes={queryResult.nodes} 
                       edges={queryResult.edges}
-                      onNodeClick={handleNodeClick} 
+                      onNodeClick={handleNodeClick}
+                      isExpanded={isGraphExpanded}
+                      onExpand={handleExpandGraph}
                     />
                   ) : queryResult?.scalarResults && queryResult.scalarResults.length > 0 ? (
                     <div className="flex items-center justify-center h-full">

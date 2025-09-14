@@ -3,452 +3,147 @@
 > NODE_ENV=development tsx server/index.ts
 
 Attempting to connect to PuppyGraph (attempt 1/10)...
-Connected to PuppyGraph via Bolt protocol on port 7687
-PuppyGraph client initialized: Connected to PuppyGraph
-1:45:18 PM [express] serving on port 5000
+Connection attempt 1 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+3:35:27 PM [express] serving on port 5000
+Attempting to connect to PuppyGraph (attempt 2/10)...
+Connection attempt 2 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 3/10)...
+Connection attempt 3 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 4/10)...
+Connection attempt 4 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
 Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
 
 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:45:19 PM [express] GET /api/metrics 200 in 14ms :: {"totalEntities":35,"activeRelationships":25,"t…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:45:22 PM [express] GET /api/metrics 200 in 5ms :: {"totalEntities":35,"activeRelationships":25,"te…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:45:35 PM [express] GET /api/metrics 200 in 16ms :: {"totalEntities":35,"activeRelationships":25,"t…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:47:03 PM [express] GET /api/metrics 304 in 14ms :: {"totalEntities":35,"activeRelationships":25,"t…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:47:04 PM [express] GET /api/metrics 304 in 3ms :: {"totalEntities":35,"activeRelationships":25,"te…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:47:05 PM [express] GET /api/metrics 304 in 2ms :: {"totalEntities":35,"activeRelationships":25,"te…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:47:06 PM [express] GET /api/metrics 304 in 2ms :: {"totalEntities":35,"activeRelationships":25,"te…
-1:47:11 PM [vite] hmr update /src/components/MetricsCards.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:47:11 PM [express] GET /api/metrics 304 in 2ms :: {"totalEntities":35,"activeRelationships":25,"te…
-1:47:19 PM [vite] hmr update /src/components/GraphVisualization.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:47:24 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:47:48 PM [express] GET /api/health 200 in 0ms :: {"status":"ok","timestamp":"2025-09-14T20:47:48.1…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:47:49 PM [express] GET /api/metrics 200 in 8ms :: {"totalEntities":35,"activeRelationships":25,"te…
-1:47:50 PM [express] GET /api/companies 200 in 3ms :: {"companies":[{"id":"d1d7c33e-112a-4ecb-b5a1-0…
-1:47:53 PM [express] GET /api/query/history 200 in 3ms :: {"queries":[],"total":0}
-1:47:55 PM [express] GET /api/graph/status 200 in 84ms :: {"connected":true,"mode":"puppygraph-bolt"…
-Processing natural language to graph query: Show me all companies
-Error in DSPy agent: Error: Python script failed with code 1: Traceback (most recent call last):
-  File "<string>", line 7, in <module>
-  File "/Users/davidhughes/dev/puppygraphagents/server/agents/dspy_agent.py", line 1, in <module>
-    import dspy
-ModuleNotFoundError: No module named 'dspy'
-
-    at ChildProcess.<anonymous> (/Users/davidhughes/dev/puppygraphagents/server/agents/dspy_wrapper.ts:57:18)
-    at ChildProcess.emit (node:events:507:28)
-    at maybeClose (node:internal/child_process:1101:16)
-    at ChildProcess._handle.onexit (node:internal/child_process:305:5)
-1:48:06 PM [express] POST /api/graph/natural 400 in 115ms :: {"error":"Failed to generate Cypher que…
-1:48:14 PM [express] POST /api/graph/query 400 in 1ms :: {"error":"Invalid input parameters","detail…
-Executing graph query: MATCH (c:Company) RETURN c LIMIT 5
-1:48:17 PM [express] POST /api/graph/query 200 in 32ms :: {"success":true,"nodes":[{"id":"Company[55…
-1:48:30 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:48:30 PM [vite] hmr update /src/components/GraphVisualization.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:48:30 PM [vite] hmr update /src/components/MetricsCards.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:48:30 PM [express] GET /api/metrics 304 in 11ms :: {"totalEntities":35,"activeRelationships":25,"t…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:49:09 PM [express] GET /api/metrics 304 in 15ms :: {"totalEntities":35,"activeRelationships":25,"t…
+3:35:43 PM [express] GET /api/metrics 304 in 24ms :: {"totalEntities":35,"activeRelationships":25,"t…
+Attempting to connect to PuppyGraph (attempt 5/10)...
+Connection attempt 5 failed: Connection was closed by server
+Retrying in 5000ms...
 Executing graph query: MATCH (c:Company {sector: 'Financial Services'})<-[:EMPLOYED_BY]-(p:Person) RETURN c, p
-1:49:22 PM [express] POST /api/graph/query 200 in 50ms :: {"success":true,"nodes":[{"id":"Person[b09…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:49:29 PM [express] GET /api/metrics 304 in 20ms :: {"totalEntities":35,"activeRelationships":25,"t…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:49:35 PM [express] GET /api/metrics 304 in 4ms :: {"totalEntities":35,"activeRelationships":25,"te…
-Executing graph query: MATCH (c:Company {sector: 'Financial Services'})<-[:EMPLOYED_BY]-(p:Person) RETURN c, p
-1:49:46 PM [express] POST /api/graph/query 200 in 35ms :: {"success":true,"nodes":[{"id":"Company[a6…
-Processing natural language to graph query: Show me companies in the financial services sector with their executives
-Error in DSPy agent: Error: Python script failed with code 1: Traceback (most recent call last):
-  File "<string>", line 7, in <module>
-  File "/Users/davidhughes/dev/puppygraphagents/server/agents/dspy_agent.py", line 1, in <module>
-    import dspy
-ModuleNotFoundError: No module named 'dspy'
-
-    at ChildProcess.<anonymous> (/Users/davidhughes/dev/puppygraphagents/server/agents/dspy_wrapper.ts:57:18)
-    at ChildProcess.emit (node:events:507:28)
-    at maybeClose (node:internal/child_process:1101:16)
-    at ChildProcess._handle.onexit (node:internal/child_process:305:5)
-1:49:50 PM [express] POST /api/graph/natural 400 in 102ms :: {"error":"Failed to generate Cypher que…
+Error executing graph query: Error: PuppyGraph client is not connected. Please ensure PuppyGraph service is running.
+    at PuppyGraphClient.executeCypherQuery (/Users/davidhughes/dev/puppygraphagents/server/graph/puppygraph_client.ts:97:13)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/routes.ts:261:45)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/index.ts:49:3)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at urlencodedParser (/Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/types/urlencoded.js:85:7)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/read.js:137:5
+    at AsyncResource.runInAsyncScope (node:async_hooks:214:14)
+    at invokeCallback (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:238:16)
+    at done (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:507:28)
+    at endReadableNT (node:internal/streams/readable:1696:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+3:35:47 PM [express] POST /api/graph/query 500 in 4ms :: {"error":"Failed to execute graph query","d…
 Executing graph query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r
-1:49:56 PM [express] POST /api/graph/query 200 in 35ms :: {"success":true,"nodes":[{"id":"Company[a6…
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:51:33 PM [express] GET /api/metrics 304 in 16ms :: {"totalEntities":35,"activeRelationships":25,"t…
-1:52:00 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:52:04 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:52:10 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:52:15 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:52:20 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:52:29 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:52:41 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:52:41 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:53:39 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-Database counts: {
-  companies: '10',
-  people: '10',
-  ratings: '6',
-  transactions: '4',
-  regulatoryEvents: '5',
-  employments: '10',
-  queries: '0'
-}
-Raw query results: {
-  companyCount: [ { count: '10' } ],
-  personCount: [ { count: '10' } ],
-  ratingCount: [ { count: '6' } ],
-  transactionCount: [ { count: '4' } ],
-  regulatoryEventCount: [ { count: '5' } ],
-  employmentCount: [ { count: '10' } ],
-  queryCount: [ { count: '0' } ]
-}
-Calculated metrics: {
-  totalEntities: 35,
-  activeRelationships: 25,
-  temporalEvents: 9,
-  aiQueriesProcessed: 0
-}
-1:53:44 PM [express] GET /api/metrics 304 in 8ms :: {"totalEntities":35,"activeRelationships":25,"te…
+Error executing graph query: Error: PuppyGraph client is not connected. Please ensure PuppyGraph service is running.
+    at PuppyGraphClient.executeCypherQuery (/Users/davidhughes/dev/puppygraphagents/server/graph/puppygraph_client.ts:97:13)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/routes.ts:261:45)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/index.ts:49:3)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at urlencodedParser (/Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/types/urlencoded.js:85:7)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/read.js:137:5
+    at AsyncResource.runInAsyncScope (node:async_hooks:214:14)
+    at invokeCallback (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:238:16)
+    at done (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:507:28)
+    at endReadableNT (node:internal/streams/readable:1696:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+3:35:50 PM [express] POST /api/graph/query 500 in 5ms :: {"error":"Failed to execute graph query","d…
+Attempting to connect to PuppyGraph (attempt 6/10)...
+Connection attempt 6 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 7/10)...
+Connection attempt 7 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 8/10)...
+Connection attempt 8 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 9/10)...
+Connection attempt 9 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+Retrying in 5000ms...
+Attempting to connect to PuppyGraph (attempt 10/10)...
+Connection attempt 10 failed: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+PuppyGraph client initialization failed, will retry in background: PuppyGraph connection failed after 10 attempts: Failed to connect to server. Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. Caused by: read ECONNRESET
+3:36:14 PM [express] POST /api/graph/query 400 in 0ms :: {"error":"Invalid input parameters","detail…
+Executing graph query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r LIMIT 10
+Error executing graph query: Error: PuppyGraph client is not connected. Please ensure PuppyGraph service is running.
+    at PuppyGraphClient.executeCypherQuery (/Users/davidhughes/dev/puppygraphagents/server/graph/puppygraph_client.ts:97:13)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/routes.ts:261:45)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/index.ts:49:3)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at urlencodedParser (/Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/types/urlencoded.js:85:7)
+    at Layer.handle [as handle_request] (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:328:13)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/davidhughes/dev/puppygraphagents/node_modules/express/lib/router/index.js:280:10)
+    at /Users/davidhughes/dev/puppygraphagents/node_modules/body-parser/lib/read.js:137:5
+    at AsyncResource.runInAsyncScope (node:async_hooks:214:14)
+    at invokeCallback (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:238:16)
+    at done (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/Users/davidhughes/dev/puppygraphagents/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:507:28)
+    at endReadableNT (node:internal/streams/readable:1696:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+3:36:17 PM [express] POST /api/graph/query 500 in 1ms :: {"error":"Failed to execute graph query","d…
+Attempting to connect to PuppyGraph (attempt 1/10)...
+Connected to PuppyGraph via Bolt protocol on port 7687
+Executing graph query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r LIMIT 10
+3:36:25 PM [express] POST /api/graph/query 200 in 85ms :: {"success":true,"nodes":[{"id":"Company[a6…
+3:36:36 PM [express] GET /api/metrics 304 in 35ms :: {"totalEntities":35,"activeRelationships":25,"t…
 Executing graph query: MATCH (c:Company {sector: 'Financial Services'})<-[:EMPLOYED_BY]-(p:Person) RETURN c, p
-1:53:49 PM [express] POST /api/graph/query 200 in 44ms :: {"success":true,"nodes":[{"id":"Company[3a…
+3:36:41 PM [express] POST /api/graph/query 200 in 94ms :: {"success":true,"nodes":[{"id":"Company[d5…
 Executing graph query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r
-1:53:56 PM [express] POST /api/graph/query 200 in 27ms :: {"success":true,"nodes":[{"id":"Company[55…
-Executing graph query: MATCH path = (c:Company)-[:HAS_RATING]->(r:Rating) RETURN path
-1:54:54 PM [express] POST /api/graph/query 200 in 34ms :: {"success":true,"nodes":[],"edges":[],"sca…
-1:56:05 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
-1:56:17 PM [express] POST /api/graph/query 400 in 0ms :: {"error":"Invalid input parameters","detail…
-Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
-1:56:19 PM [express] POST /api/graph/query 200 in 24ms :: {"success":true,"nodes":[{"id":"Company[3a…
-Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
-1:56:25 PM [express] POST /api/graph/query 200 in 28ms :: {"success":true,"nodes":[{"id":"Company[3a…
-Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
-1:56:47 PM [express] POST /api/graph/query 200 in 21ms :: {"success":true,"nodes":[{"id":"Company[3a…
+3:36:57 PM [express] POST /api/graph/query 200 in 53ms :: {"success":true,"nodes":[{"id":"Rating[1af…
+Executing graph query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r
+3:37:10 PM [express] POST /api/graph/query 200 in 51ms :: {"success":true,"nodes":[{"id":"Company[55…
