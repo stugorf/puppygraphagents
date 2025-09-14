@@ -16,12 +16,23 @@ interface FinancialRecord {
   status: 'active' | 'completed' | 'pending';
 }
 
+interface QueryResult {
+  nodes: any[];
+  edges: any[];
+  reasoning?: string;
+  execution_time?: number;
+  query_type?: string;
+  cypher_query?: string;
+}
+
 interface DataTableProps {
   data?: FinancialRecord[];
+  nodes?: any[];
+  queryResult?: QueryResult | null;
   onRowClick?: (record: FinancialRecord) => void;
 }
 
-export function DataTable({ data = [], onRowClick }: DataTableProps) {
+export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [sortField, setSortField] = useState<string>("date");

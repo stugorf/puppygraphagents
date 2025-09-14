@@ -9,13 +9,48 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
+interface GraphNode {
+  id: string;
+  label: string;
+  type: 'company' | 'person' | 'transaction' | 'rating';
+  x: number;
+  y: number;
+  properties?: Record<string, any>;
+}
+
+interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+  type: string;
+  timestamp?: string;
+}
+
+interface QueryResult {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  reasoning?: string;
+  execution_time?: number;
+  query_type?: string;
+  cypher_query?: string;
+}
+
 export function Dashboard() {
   const [selectedTab, setSelectedTab] = useState("query");
+  const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
+  const [lastQuery, setLastQuery] = useState<string>("");
 
   const handleExecuteQuery = (query: string, type: 'natural' | 'cypher') => {
     console.log(`Executing ${type} query:`, query);
-    // Simulate switching to graph view after query execution
+    setLastQuery(query);
+    // Switch to graph view after query execution
     setSelectedTab("graph");
+  };
+
+  const handleQueryResult = (result: QueryResult) => {
+    console.log('Received query result:', result);
+    setQueryResult(result);
   };
 
   const handleNodeClick = (node: any) => {
@@ -55,7 +90,10 @@ export function Dashboard() {
           {/* Left Panel - Query Interface */}
           <ResizablePanel defaultSize={30} minSize={25}>
             <div className="h-full p-4">
-              <QueryInterface onExecuteQuery={handleExecuteQuery} />
+              <QueryInterface 
+                onExecuteQuery={handleExecuteQuery} 
+                onQueryResult={handleQueryResult}
+              />
             </div>
           </ResizablePanel>
 
@@ -73,19 +111,31 @@ export function Dashboard() {
                 
                 <TabsContent value="query" className="h-[calc(100%-3rem)] mt-4">
                   <div className="space-y-4 h-full">
-                    <MetricsCards />
+                    <MetricsCards queryResult={queryResult} />
                     <div className="flex-1">
-                      <GraphVisualization onNodeClick={handleNodeClick} />
+                      <GraphVisualization 
+                        nodes={queryResult?.nodes} 
+                        edges={queryResult?.edges}
+                        onNodeClick={handleNodeClick} 
+                      />
                     </div>
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="graph" className="h-[calc(100%-3rem)] mt-4">
-                  <GraphVisualization onNodeClick={handleNodeClick} />
+                  <GraphVisualization 
+                    nodes={queryResult?.nodes} 
+                    edges={queryResult?.edges}
+                    onNodeClick={handleNodeClick} 
+                  />
                 </TabsContent>
                 
                 <TabsContent value="data" className="h-[calc(100%-3rem)] mt-4">
-                  <DataTable onRowClick={handleRowClick} />
+                  <DataTable 
+                    nodes={queryResult?.nodes}
+                    queryResult={queryResult}
+                    onRowClick={handleRowClick} 
+                  />
                 </TabsContent>
               </Tabs>
             </div>

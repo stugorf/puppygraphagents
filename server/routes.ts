@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { dspyAgent } from "./agents/dspy_wrapper";
 import { puppyGraphClient } from "./graph/puppygraph_client";
+import { multiHopAgent } from "./agents/multi_hop_wrapper";
 import { insertQueryHistorySchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -278,6 +279,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         error: "Failed to get graph status",
         details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Multi-hop Retrieval Endpoint
+  app.post("/api/graph/multi-hop", async (req, res) => {
+    try {
+      const { query, max_hops } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Query is required and must be a string" });
+      }
+
+      const maxHops = max_hops || 3;
+      if (maxHops < 1 || maxHops > 5) {
+        return res.status(400).json({ error: "max_hops must be between 1 and 5" });
+      }
+
+      console.log(`Processing multi-hop query: ${query} (max hops: ${maxHops})`);
+      const startTime = Date.now();
+      
+      // Process the complex query using multi-hop retrieval
+      const result = await multiHopAgent.processComplexQuery(query, maxHops);
+      
+      const totalExecutionTime = Date.now() - startTime;
+
+      // Save to query history
+      try {
+        await storage.insertQueryHistory({
+          originalQuery: query,
+          queryType: "multi-hop",
+          generatedCypher: result.cypher_queries.join('; '),
+          results: { 
+            reasoning: result.reasoning, 
+            hops: result.hops.length,
+            nodes_count: result.final_nodes.length,
+            edges_count: result.final_edges.length,
+            multi_hop_execution_time: result.execution_time
+          },
+          executionTime: totalExecutionTime
+        });
+      } catch (historyError) {
+        console.warn("Failed to save multi-hop query history:", historyError);
+      }
+
+      res.json({
+        success: true,
+        query_type: "multi-hop",
+        original_query: result.query,
+        reasoning: result.reasoning,
+        hops_executed: result.hops.length,
+        hops: result.hops,
+        cypher_queries: result.cypher_queries,
+        nodes: result.final_nodes,
+        edges: result.final_edges,
+        multi_hop_execution_time: result.execution_time,
+        total_execution_time: totalExecutionTime,
+        error: result.error
+      });
+
+    } catch (error) {
+      console.error("Error processing multi-hop query:", error);
+      res.status(500).json({ 
+        error: "Failed to process multi-hop query",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Multi-hop Agent Status
+  app.get("/api/agent/multi-hop/status", async (req, res) => {
+    try {
+      const isWorking = await multiHopAgent.test();
+      res.json({ 
+        status: isWorking ? "operational" : "error",
+        agent_type: "Multi-Hop DSPy",
+        capabilities: ["complex_reasoning", "multi_step_retrieval", "graph_traversal", "temporal_analysis"]
+      });
+    } catch (error) {
+      res.json({ 
+        status: "error", 
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });

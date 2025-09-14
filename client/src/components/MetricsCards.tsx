@@ -11,11 +11,21 @@ interface MetricData {
   description: string;
 }
 
-interface MetricsCardsProps {
-  metrics?: MetricData[];
+interface QueryResult {
+  nodes: any[];
+  edges: any[];
+  reasoning?: string;
+  execution_time?: number;
+  query_type?: string;
+  cypher_query?: string;
 }
 
-export function MetricsCards({ metrics }: MetricsCardsProps) {
+interface MetricsCardsProps {
+  metrics?: MetricData[];
+  queryResult?: QueryResult | null;
+}
+
+export function MetricsCards({ metrics, queryResult }: MetricsCardsProps) {
   // Mock data for demonstration - todo: remove mock functionality
   const defaultMetrics: MetricData[] = [
     {
