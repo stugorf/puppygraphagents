@@ -28,7 +28,7 @@ services:
       start_period: 60s
 
   postgres:
-    image: postgres:14-alpine
+    image: postgres:16-alpine
     container_name: temporal_graph_postgres
     environment:
       - POSTGRES_DB=temporal_graph
@@ -47,6 +47,37 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: temporal_graph_app
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/temporal_graph
+      - PUPPYGRAPH_URL=http://puppygraph:8081
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SESSION_SECRET=${SESSION_SECRET:-temporal-kg-session-secret}
+      - PORT=5000
+    networks:
+      - graph_network
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./attached_assets:/app/attached_assets:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      puppygraph:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 networks:
   graph_network:
