@@ -113,31 +113,45 @@ export class PuppyGraphClient {
 
     const session = this.driver.session();
     try {
-      const result = await session.run(cypherQuery);
+      // First, try to extract relationships from the pattern if they're not explicitly returned
+      const enhancedQuery = this.enhanceQueryForRelationships(cypherQuery);
+      const result = await session.run(enhancedQuery);
       const executionTime = Date.now() - startTime;
       
       // Transform Neo4j result to our format
       const nodes: GraphNode[] = [];
       const edges: GraphEdge[] = [];
       const scalarResults: any[] = [];
+      const nodeMap = new Map<string, GraphNode>();
+      const edgeMap = new Map<string, GraphEdge>();
       
       result.records.forEach(record => {
         record.keys.forEach(key => {
           const value = record.get(key);
           if (neo4j.isNode(value)) {
-            nodes.push({
-              id: value.elementId,
-              label: value.labels[0] || 'Unknown',
-              properties: value.properties
-            });
+            const nodeId = value.elementId;
+            if (!nodeMap.has(nodeId)) {
+              const node = {
+                id: nodeId,
+                label: value.labels[0] || 'Unknown',
+                properties: value.properties
+              };
+              nodeMap.set(nodeId, node);
+              nodes.push(node);
+            }
           } else if (neo4j.isRelationship(value)) {
-            edges.push({
-              id: value.elementId,
-              fromId: value.startNodeElementId,
-              toId: value.endNodeElementId,
-              label: value.type,
-              properties: value.properties
-            });
+            const edgeId = value.elementId;
+            if (!edgeMap.has(edgeId)) {
+              const edge = {
+                id: edgeId,
+                fromId: value.startNodeElementId,
+                toId: value.endNodeElementId,
+                label: value.type,
+                properties: value.properties
+              };
+              edgeMap.set(edgeId, edge);
+              edges.push(edge);
+            }
           } else {
             // Handle scalar values (counts, aggregations, etc.)
             let processedValue = value;
@@ -165,6 +179,62 @@ export class PuppyGraphClient {
     } finally {
       await session.close();
     }
+  }
+
+  private enhanceQueryForRelationships(cypherQuery: string): string {
+    // For queries that have relationship patterns but don't return relationships,
+    // modify them to also return the relationships
+    const upperQuery = cypherQuery.toUpperCase();
+    
+    // Check if query has relationship patterns but doesn't return relationships
+    // Handle both forward (->) and reverse (<-) relationships
+    const hasRelationshipPattern = /\([^)]*\)\s*-\[[^\]]*\]->\([^)]*\)/.test(cypherQuery) || 
+                                  /\([^)]*\)<-\[[^\]]*\]-\s*\([^)]*\)/.test(cypherQuery);
+    const returnsRelationships = upperQuery.includes('RETURN') && 
+      (upperQuery.includes('R,') || upperQuery.includes('R ') || upperQuery.includes('RELATIONSHIP'));
+    
+    // Check if query returns scalar values (properties) instead of nodes/edges
+    const returnsScalarValues = upperQuery.includes('RETURN') && 
+      (upperQuery.includes('.NAME') || upperQuery.includes('.TITLE') || upperQuery.includes('.SECTOR') || 
+       upperQuery.includes('.VALUE') || upperQuery.includes('.ID') || upperQuery.includes('.TYPE'));
+    
+    
+    if (hasRelationshipPattern && !returnsRelationships && !returnsScalarValues) {
+      // Handle both forward and reverse relationships
+      let enhancedQuery = cypherQuery;
+      
+      // Replace forward relationships: (a)-[:REL]->(b)
+      enhancedQuery = enhancedQuery.replace(
+        /\(([^)]*)\)\s*-\[([^\]]*)\]->\(([^)]*)\)/g,
+        (match, startNode, relType, endNode) => {
+          const relTypeMatch = relType.match(/:([^:\]]+)/);
+          const relTypeName = relTypeMatch ? relTypeMatch[1] : 'RELATED_TO';
+          return `(${startNode})-[rel:${relTypeName}]->(${endNode})`;
+        }
+      );
+      
+      // Replace reverse relationships: (a)<-[:REL]-(b)
+      enhancedQuery = enhancedQuery.replace(
+        /\(([^)]*)\)<-\[([^\]]*)\]-\s*\(([^)]*)\)/g,
+        (match, startNode, relType, endNode) => {
+          const relTypeMatch = relType.match(/:([^:\]]+)/);
+          const relTypeName = relTypeMatch ? relTypeMatch[1] : 'RELATED_TO';
+          return `(${endNode})-[rel:${relTypeName}]->(${startNode})`;
+        }
+      );
+      
+      // Now add the relationship variable to the RETURN clause
+      const returnMatch = enhancedQuery.match(/RETURN\s+([^]+?)$/i);
+      if (returnMatch) {
+        const currentReturn = returnMatch[1].trim();
+        const finalQuery = enhancedQuery.replace(/RETURN\s+[^]+?$/i, `RETURN ${currentReturn}, rel`);
+        return finalQuery;
+      }
+      
+      return enhancedQuery;
+    }
+    
+    return cypherQuery;
   }
 
 

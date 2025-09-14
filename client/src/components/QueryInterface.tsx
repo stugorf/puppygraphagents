@@ -30,6 +30,7 @@ interface GraphEdge {
 interface QueryResult {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  scalarResults?: Array<{key: string, value: any}>;
   reasoning?: string;
   execution_time?: number;
   query_type?: string;
@@ -57,7 +58,7 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
   const { toast } = useToast();
 
   // Transform backend data to frontend format
-  const transformGraphData = (backendNodes: any[], backendEdges: any[]): QueryResult => {
+  const transformGraphData = (backendNodes: any[], backendEdges: any[], scalarResults?: Array<{key: string, value: any}>): QueryResult => {
     const nodeTypeMapping: Record<string, 'company' | 'person' | 'transaction' | 'rating'> = {
       'Company': 'company',
       'Person': 'person', 
@@ -80,17 +81,21 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
       };
     });
 
-    // Transform edges to use source/target instead of from_id/to_id
+    // Transform edges to use source/target instead of fromId/toId
     const edges: GraphEdge[] = backendEdges.map(edge => ({
       id: edge.id,
-      source: edge.from_id || edge.fromId,
-      target: edge.to_id || edge.toId,
+      source: edge.fromId || edge.from_id,
+      target: edge.toId || edge.to_id,
       label: edge.label,
       type: edge.label,
       timestamp: edge.properties?.start_date || edge.properties?.valid_from
     }));
 
-    return { nodes, edges };
+    return { 
+      nodes, 
+      edges, 
+      scalarResults: scalarResults || []
+    };
   };
 
   const handleExecute = async () => {
@@ -151,7 +156,7 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
       }
 
       // Transform the backend data to frontend format
-      const result = transformGraphData(data.nodes || [], data.edges || []);
+      const result = transformGraphData(data.nodes || [], data.edges || [], data.scalarResults || []);
       
       // Add metadata
       result.reasoning = data.reasoning;
@@ -159,13 +164,19 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
       result.query_type = data.query_type;
       result.cypher_query = data.cypher_query || data.cypher_queries?.join('; ');
 
-      console.log('Query result:', result);
+      console.log('API response data:', data);
+      console.log('Query result with scalarResults:', result);
       onExecuteQuery?.(query, activeTab as 'natural' | 'cypher');
       onQueryResult?.(result);
 
+      const hasScalarData = result.scalarResults && result.scalarResults.length > 0;
+      const scalarCount = hasScalarData ? Math.floor(result.scalarResults.length / 3) : 0; // Assuming 3 fields per row
+      
       toast({
         title: "Query executed successfully",
-        description: `Found ${result.nodes.length} nodes and ${result.edges.length} edges${result.execution_time ? ` in ${(result.execution_time/1000).toFixed(2)}s` : ''}`,
+        description: hasScalarData 
+          ? `Found ${scalarCount} scalar result rows${result.execution_time ? ` in ${(result.execution_time/1000).toFixed(2)}s` : ''}`
+          : `Found ${result.nodes.length} nodes and ${result.edges.length} edges${result.execution_time ? ` in ${(result.execution_time/1000).toFixed(2)}s` : ''}`,
       });
 
     } catch (error) {

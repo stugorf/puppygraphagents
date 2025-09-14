@@ -1,0 +1,56 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+Attempting to connect to PuppyGraph (attempt 1/10)...
+Connected to PuppyGraph via Bolt protocol on port 7687
+PuppyGraph client initialized: Connected to PuppyGraph
+1:58:04 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+1:58:06 PM [express] GET /api/metrics 304 in 18ms :: {"totalEntities":35,"activeRelationships":25,"t…
+Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+Query analysis: {
+  hasRelationshipPattern: true,
+  returnsRelationships: false,
+  query: 'MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r'
+}
+Enhanced query: MATCH (c:Company)-[rel:HAS_RATING]->(r:Rating) RETURN c, r, rel
+Original query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+Enhanced query: MATCH (c:Company)-[rel:HAS_RATING]->(r:Rating) RETURN c, r, rel
+1:58:13 PM [express] POST /api/graph/query 200 in 32ms :: {"success":true,"nodes":[{"id":"Company[3a…
+Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+Query analysis: {
+  hasRelationshipPattern: true,
+  returnsRelationships: false,
+  query: 'MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r'
+}
+Enhanced query: MATCH (c:Company)-[rel:HAS_RATING]->(r:Rating) RETURN c, r, rel
+Original query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+Enhanced query: MATCH (c:Company)-[rel:HAS_RATING]->(r:Rating) RETURN c, r, rel
+1:58:17 PM [express] POST /api/graph/query 200 in 22ms :: {"success":true,"nodes":[{"id":"Company[a6…
+1:58:40 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=BvehYgMoGf7uiz1yizBUf
+Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+Query analysis: {
+  hasRelationshipPattern: true,
+  returnsRelationships: false,
+  query: 'MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r'
+}
+Enhanced query: MATCH (c:Company)-[rel:HAS_RATING]->(r:Rating) RETURN c, r, rel
+Original query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+Enhanced query: MATCH (c:Company)-[rel:HAS_RATING]->(r:Rating) RETURN c, r, rel
+1:58:44 PM [express] POST /api/graph/query 200 in 27ms :: {"success":true,"nodes":[{"id":"Company[a6…
+Executing graph query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r
+Query analysis: {
+  hasRelationshipPattern: true,
+  returnsRelationships: false,
+  query: 'MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r'
+}
+Enhanced query: MATCH (c:Company)-[rel:HAS_RATING]->(r:Rating) RETURN c, r, rel
+Original query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r
+Enhanced query: MATCH (c:Company)-[rel:HAS_RATING]->(r:Rating) RETURN c, r, rel
+1:58:52 PM [express] POST /api/graph/query 200 in 25ms :: {"success":true,"nodes":[{"id":"Company[55…
+1:58:55 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=BvehYgMoGf7uiz1yizBUf

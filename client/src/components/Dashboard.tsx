@@ -30,6 +30,7 @@ interface GraphEdge {
 interface QueryResult {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  scalarResults?: Array<{key: string, value: any}>;
   reasoning?: string;
   execution_time?: number;
   query_type?: string;
@@ -49,13 +50,28 @@ export function Dashboard() {
   const handleExecuteQuery = (query: string, type: 'natural' | 'cypher') => {
     console.log(`Executing ${type} query:`, query);
     setLastQuery(query);
-    // Switch to graph view after query execution
-    setSelectedTab("graph");
+    // Switch to appropriate view based on result type
+    // Will be determined after query execution
   };
 
   const handleQueryResult = (result: QueryResult) => {
     console.log('Received query result:', result);
     setQueryResult(result);
+    
+    // Determine which view to show based on result type
+    const hasGraphData = result.nodes && result.nodes.length > 0;
+    const hasScalarData = result.scalarResults && result.scalarResults.length > 0;
+    
+    if (hasGraphData) {
+      // Show graph view for node/edge results
+      setSelectedTab("graph");
+    } else if (hasScalarData) {
+      // Show data view for scalar-only results
+      setSelectedTab("data");
+    } else {
+      // Default to data view if no specific data type
+      setSelectedTab("data");
+    }
   };
 
   const handleNodeClick = (node: any) => {
@@ -136,11 +152,40 @@ export function Dashboard() {
                 </TabsContent>
                 
                 <TabsContent value="graph" className="h-[calc(100%-3rem)] mt-4">
-                  <GraphVisualization 
-                    nodes={queryResult?.nodes} 
-                    edges={queryResult?.edges}
-                    onNodeClick={handleNodeClick} 
-                  />
+                  {queryResult?.nodes && queryResult.nodes.length > 0 ? (
+                    <GraphVisualization 
+                      nodes={queryResult.nodes} 
+                      edges={queryResult.edges}
+                      onNodeClick={handleNodeClick} 
+                    />
+                  ) : queryResult?.scalarResults && queryResult.scalarResults.length > 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center space-y-4">
+                        <div className="text-6xl">📊</div>
+                        <h3 className="text-xl font-semibold">Scalar Data Only</h3>
+                        <p className="text-muted-foreground max-w-md">
+                          This query returned scalar values (properties) instead of graph nodes and relationships. 
+                          Switch to the Data View to see the results.
+                        </p>
+                        <button 
+                          onClick={() => setSelectedTab("data")}
+                          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                        >
+                          View Data
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center space-y-4">
+                        <div className="text-6xl">🔍</div>
+                        <h3 className="text-xl font-semibold">No Graph Data</h3>
+                        <p className="text-muted-foreground">
+                          Execute a query to see graph visualization results.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="data" className="h-[calc(100%-3rem)] mt-4">

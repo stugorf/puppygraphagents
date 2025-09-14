@@ -286,3 +286,169 @@ Calculated metrics: {
   aiQueriesProcessed: 0
 }
 1:48:30 PM [express] GET /api/metrics 304 in 11ms :: {"totalEntities":35,"activeRelationships":25,"t…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:49:09 PM [express] GET /api/metrics 304 in 15ms :: {"totalEntities":35,"activeRelationships":25,"t…
+Executing graph query: MATCH (c:Company {sector: 'Financial Services'})<-[:EMPLOYED_BY]-(p:Person) RETURN c, p
+1:49:22 PM [express] POST /api/graph/query 200 in 50ms :: {"success":true,"nodes":[{"id":"Person[b09…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:49:29 PM [express] GET /api/metrics 304 in 20ms :: {"totalEntities":35,"activeRelationships":25,"t…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:49:35 PM [express] GET /api/metrics 304 in 4ms :: {"totalEntities":35,"activeRelationships":25,"te…
+Executing graph query: MATCH (c:Company {sector: 'Financial Services'})<-[:EMPLOYED_BY]-(p:Person) RETURN c, p
+1:49:46 PM [express] POST /api/graph/query 200 in 35ms :: {"success":true,"nodes":[{"id":"Company[a6…
+Processing natural language to graph query: Show me companies in the financial services sector with their executives
+Error in DSPy agent: Error: Python script failed with code 1: Traceback (most recent call last):
+  File "<string>", line 7, in <module>
+  File "/Users/davidhughes/dev/puppygraphagents/server/agents/dspy_agent.py", line 1, in <module>
+    import dspy
+ModuleNotFoundError: No module named 'dspy'
+
+    at ChildProcess.<anonymous> (/Users/davidhughes/dev/puppygraphagents/server/agents/dspy_wrapper.ts:57:18)
+    at ChildProcess.emit (node:events:507:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:305:5)
+1:49:50 PM [express] POST /api/graph/natural 400 in 102ms :: {"error":"Failed to generate Cypher que…
+Executing graph query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r
+1:49:56 PM [express] POST /api/graph/query 200 in 35ms :: {"success":true,"nodes":[{"id":"Company[a6…
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:51:33 PM [express] GET /api/metrics 304 in 16ms :: {"totalEntities":35,"activeRelationships":25,"t…
+1:52:00 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:52:04 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:52:10 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:52:15 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:52:20 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:52:29 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:52:41 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:52:41 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:53:39 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+Database counts: {
+  companies: '10',
+  people: '10',
+  ratings: '6',
+  transactions: '4',
+  regulatoryEvents: '5',
+  employments: '10',
+  queries: '0'
+}
+Raw query results: {
+  companyCount: [ { count: '10' } ],
+  personCount: [ { count: '10' } ],
+  ratingCount: [ { count: '6' } ],
+  transactionCount: [ { count: '4' } ],
+  regulatoryEventCount: [ { count: '5' } ],
+  employmentCount: [ { count: '10' } ],
+  queryCount: [ { count: '0' } ]
+}
+Calculated metrics: {
+  totalEntities: 35,
+  activeRelationships: 25,
+  temporalEvents: 9,
+  aiQueriesProcessed: 0
+}
+1:53:44 PM [express] GET /api/metrics 304 in 8ms :: {"totalEntities":35,"activeRelationships":25,"te…
+Executing graph query: MATCH (c:Company {sector: 'Financial Services'})<-[:EMPLOYED_BY]-(p:Person) RETURN c, p
+1:53:49 PM [express] POST /api/graph/query 200 in 44ms :: {"success":true,"nodes":[{"id":"Company[3a…
+Executing graph query: MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r
+1:53:56 PM [express] POST /api/graph/query 200 in 27ms :: {"success":true,"nodes":[{"id":"Company[55…
+Executing graph query: MATCH path = (c:Company)-[:HAS_RATING]->(r:Rating) RETURN path
+1:54:54 PM [express] POST /api/graph/query 200 in 34ms :: {"success":true,"nodes":[],"edges":[],"sca…
+1:56:05 PM [vite] hmr update /src/components/DataTable.tsx, /src/index.css?v=pJxWnp9O_CbGAaC9M313f
+1:56:17 PM [express] POST /api/graph/query 400 in 0ms :: {"error":"Invalid input parameters","detail…
+Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+1:56:19 PM [express] POST /api/graph/query 200 in 24ms :: {"success":true,"nodes":[{"id":"Company[3a…
+Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+1:56:25 PM [express] POST /api/graph/query 200 in 28ms :: {"success":true,"nodes":[{"id":"Company[3a…
+Executing graph query: MATCH (c:Company) -[:HAS_RATING]->(r:Rating) RETURN c, r
+1:56:47 PM [express] POST /api/graph/query 200 in 21ms :: {"success":true,"nodes":[{"id":"Company[3a…
