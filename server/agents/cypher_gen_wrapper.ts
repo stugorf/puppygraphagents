@@ -36,7 +36,7 @@ import sys
 import os
 sys.path.append('${this.agentsDir}')
 
-from multi_hop_agent import CypherGenAgent
+from cypher_generation_agent import CypherGenAgent
 import json
 
 # Initialize agent (will load API key from .env file)

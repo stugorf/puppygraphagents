@@ -73,6 +73,9 @@ class CypherGeneration(dspy.Signature):
 class CypherGenAgent:
     """
     Agent that converts natural language queries to Cypher queries using DSPy
+    
+    This agent generates Cypher queries with case-insensitive and fuzzy matching
+    capabilities to handle data inconsistencies and improve query success rates.
     """
     
     def __init__(self, openrouter_api_key: str = None, openrouter_api_base: str = None, schema_context: str = None):
