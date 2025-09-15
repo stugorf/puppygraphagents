@@ -53,7 +53,9 @@ export class PuppyGraphClient {
         console.log(`Attempting to connect to PuppyGraph (attempt ${attempt}/${maxRetries})...`);
         
         // Connect to PuppyGraph using Bolt protocol on port 7687
-        const uri = 'bolt://localhost:7687';
+        // Use container name in Docker environment, localhost in development
+        const host = process.env.NODE_ENV === 'production' ? 'puppygraph' : 'localhost';
+        const uri = `bolt://${host}:7687`;
         this.driver = neo4j.driver(uri, neo4j.auth.basic(this.config.username, this.config.password), {
           encrypted: false, // Disable encryption for PuppyGraph
           trust: 'TRUST_ALL_CERTIFICATES',
@@ -165,6 +167,17 @@ export class PuppyGraphClient {
           }
         });
       });
+
+      // Post-process scalar results to reconstruct nodes from property queries
+      // This handles cases where queries return specific properties like "c.name, c.ticker"
+      if (scalarResults.length > 0) {
+        const reconstructedNodes = this.reconstructNodesFromScalarResults(scalarResults);
+        if (reconstructedNodes.length > 0) {
+          nodes.push(...reconstructedNodes);
+          // Clear scalar results since they've been reconstructed into nodes
+          scalarResults.length = 0; // Clear array instead of reassigning
+        }
+      }
       
       return {
         nodes,
@@ -244,6 +257,90 @@ export class PuppyGraphClient {
       label: node.label || 'Unknown',
       properties: node.properties || {}
     }));
+  }
+
+  private reconstructNodesFromScalarResults(scalarResults: any[]): GraphNode[] {
+    const nodeGroups = new Map<string, any>();
+    
+    // Group scalar results by property type first, then by record
+    const propertyGroups = new Map<string, any[]>();
+    
+    // Group by property name (e.g., "c.name", "c.ticker")
+    scalarResults.forEach(scalar => {
+      const key = scalar.key;
+      if (!propertyGroups.has(key)) {
+        propertyGroups.set(key, []);
+      }
+      propertyGroups.get(key)!.push(scalar.value);
+    });
+    
+    // Determine the number of records by looking at the first property group
+    const firstProperty = Array.from(propertyGroups.keys())[0];
+    const recordCount = propertyGroups.get(firstProperty)?.length || 0;
+    
+    // Reconstruct nodes by combining properties across records
+    for (let recordIndex = 0; recordIndex < recordCount; recordIndex++) {
+      const nodeId = `reconstructed_${recordIndex}`;
+      const properties: any = {};
+      let label = 'Unknown';
+      
+      // Extract properties for this record from each property group
+      for (const [propertyKey, values] of propertyGroups.entries()) {
+        if (recordIndex < values.length) {
+          const value = values[recordIndex];
+          
+          // Extract property name and node alias from keys like "c.name", "p.title"
+          const match = propertyKey.match(/^(\w+)\.(.+)$/);
+          if (match) {
+            const [, nodeAlias, propertyName] = match;
+            properties[propertyName] = value;
+            
+            // Determine node label based on common property patterns
+            if (propertyName === 'name' && (propertyKey.includes('c.') || propertyKey.includes('company'))) {
+              label = 'Company';
+            } else if (propertyName === 'name' && (propertyKey.includes('p.') || propertyKey.includes('person'))) {
+              label = 'Person';
+            } else if (propertyName === 'rating' && propertyKey.includes('r.')) {
+              label = 'Rating';
+            } else if (propertyName === 'type' && propertyKey.includes('t.')) {
+              label = 'Transaction';
+            } else if (propertyName === 'event_type' && propertyKey.includes('re.')) {
+              label = 'RegulatoryEvent';
+            }
+          }
+        }
+      }
+      
+      if (Object.keys(properties).length > 0) {
+        nodeGroups.set(nodeId, {
+          id: nodeId,
+          label: label,
+          properties: properties
+        });
+      }
+    }
+    
+    return Array.from(nodeGroups.values());
+  }
+
+  private getPropertiesPerNode(scalarResults: any[]): number {
+    // Count how many unique properties we have for the first node alias
+    const firstNodeAlias = scalarResults[0]?.key?.match(/^(\w+)\./)?.[1];
+    if (!firstNodeAlias) return 1;
+    
+    // Count properties that belong to the first node alias in the first record
+    // We need to find where the first record ends (when we see a different pattern)
+    let count = 0;
+    for (const scalar of scalarResults) {
+      const match = scalar.key.match(/^(\w+)\./);
+      if (match && match[1] === firstNodeAlias) {
+        count++;
+      } else {
+        break; // We've moved to the next record
+      }
+    }
+    
+    return count;
   }
 
   private transformPuppyGraphEdges(puppyEdges: any[]): GraphEdge[] {

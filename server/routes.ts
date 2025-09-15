@@ -1,9 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { dspyAgent } from "./agents/dspy_wrapper";
 import { puppyGraphClient } from "./graph/puppygraph_client";
-import { multiHopAgent } from "./agents/multi_hop_wrapper";
+import { cypherGenAgent } from "./agents/cypher_gen_wrapper";
 import { 
   insertQueryHistorySchema, 
   temporalQuerySchema, 
@@ -13,7 +12,54 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 
+// Function to update CypherGen agent with dynamic schema
+async function updateCypherGenAgentSchema() {
+  try {
+    const schema = await puppyGraphClient.getGraphSchema();
+    
+    // Convert PuppyGraph schema to a readable format for the agent
+    const schemaContext = convertSchemaToContext(schema);
+    
+    // Update the agent with the new schema
+    cypherGenAgent.updateSchema(schemaContext);
+    
+    console.log("CypherGen agent schema updated successfully");
+  } catch (error) {
+    console.warn("Failed to update CypherGen agent schema:", error);
+    // Agent will use default schema as fallback
+  }
+}
+
+// Function to convert PuppyGraph schema to readable context
+function convertSchemaToContext(schema: any): string {
+  const vertices = schema.graph?.vertices || [];
+  const edges = schema.graph?.edges || [];
+  
+  let context = "The knowledge graph contains:\n";
+  
+  // Add node types and their properties
+  vertices.forEach((vertex: any) => {
+    const label = vertex.label;
+    const attributes = vertex.oneToOne?.attributes || [];
+    const propertyNames = attributes.map((attr: any) => attr.alias).join(", ");
+    context += `- ${label} nodes (${propertyNames})\n`;
+  });
+  
+  // Add relationships
+  if (edges.length > 0) {
+    context += "\nRelationships:\n";
+    edges.forEach((edge: any) => {
+      context += `- ${edge.label}: ${edge.fromVertex} -> ${edge.toVertex}\n`;
+    });
+  }
+  
+  return context;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Update CypherGen agent with dynamic schema on startup
+  await updateCypherGenAgentSchema();
   
   // Health check endpoint
   app.get("/api/health", (req, res) => {
@@ -94,8 +140,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Processing natural language query: ${query}`);
       const startTime = Date.now();
       
-      // Process query with DSPy agent
-      const result = await dspyAgent.processNaturalQuery(query);
+      // Process query with CypherGen agent
+      const result = await cypherGenAgent.generateCypherQuery(query);
       const executionTime = Date.now() - startTime;
 
       // Save query to history
@@ -106,8 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           generatedCypher: result.cypher_query,
           results: { 
             reasoning: result.reasoning, 
-            query_type: result.query_type,
-            time_context: result.time_context 
+            execution_time: result.execution_time
           },
           executionTime
         });
@@ -116,11 +161,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        success: result.query_type !== 'error',
-        query_type: result.query_type,
+        success: !result.error,
+        query_type: "natural",
         cypher_query: result.cypher_query,
         reasoning: result.reasoning,
-        time_context: result.time_context,
         execution_time: executionTime,
         error: result.error
       });
@@ -134,11 +178,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Multi-hop Query Processing
-  app.post("/api/query/multihop", async (req, res) => {
+  // CypherGen Query Processing
+  app.post("/api/query/cyphergen", async (req, res) => {
     try {
       // Validate input with Zod schema  
-      const validationResult = multiHopQuerySchema.safeParse(req.body);
+      const validationResult = naturalLanguageQuerySchema.safeParse(req.body);
       if (!validationResult.success) {
         return res.status(400).json({ 
           error: "Invalid input parameters",
@@ -146,27 +190,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { query: question, max_hops = 3 } = validationResult.data;
+      const { query: question } = validationResult.data;
 
-      console.log(`Processing multi-hop query: ${question}`);
+      console.log(`Processing CypherGen query: ${question}`);
       const startTime = Date.now();
       
-      const result = await dspyAgent.processMultiHopQuery(question, max_hops);
+      const result = await cypherGenAgent.generateCypherQuery(question);
       const executionTime = Date.now() - startTime;
 
       res.json({
         success: !result.error,
-        hops: result.hops,
+        cypher_query: result.cypher_query,
         reasoning: result.reasoning,
-        final_query: result.final_query,
         execution_time: executionTime,
         error: result.error
       });
 
     } catch (error) {
-      console.error("Error processing multi-hop query:", error);
+      console.error("Error processing CypherGen query:", error);
       res.status(500).json({ 
-        error: "Failed to process multi-hop query",
+        error: "Failed to process CypherGen query",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
@@ -226,14 +269,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test DSPy Agent Status
+  // Test CypherGen Agent Status
   app.get("/api/agent/status", async (req, res) => {
     try {
-      const isWorking = await dspyAgent.test();
+      const isWorking = await cypherGenAgent.test();
       res.json({ 
         status: isWorking ? "operational" : "error",
-        agent_type: "DSPy",
-        capabilities: ["natural_language_to_cypher", "multi_hop_reasoning"]
+        agent_type: "CypherGen",
+        capabilities: ["natural_language_to_cypher", "graph_query_generation"]
       });
     } catch (error) {
       res.json({ 
@@ -286,19 +329,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Processing natural language to graph query: ${query}`);
       const startTime = Date.now();
       
-      // Step 1: Convert natural language to Cypher using DSPy
-      const dspyResult = await dspyAgent.processNaturalQuery(query);
+      // Step 1: Convert natural language to Cypher using CypherGen agent
+      const cypherGenResult = await cypherGenAgent.generateCypherQuery(query);
       
-      if (dspyResult.query_type === 'error' || !dspyResult.cypher_query) {
+      if (cypherGenResult.error || !cypherGenResult.cypher_query) {
         return res.status(400).json({
           error: "Failed to generate Cypher query",
-          details: dspyResult.reasoning,
-          dsph_error: dspyResult.error
+          details: cypherGenResult.reasoning,
+          cyphergen_error: cypherGenResult.error
         });
       }
 
       // Step 2: Execute the generated Cypher on the graph
-      const graphResult = await puppyGraphClient.executeCypherQuery(dspyResult.cypher_query);
+      const graphResult = await puppyGraphClient.executeCypherQuery(cypherGenResult.cypher_query);
       
       const totalExecutionTime = Date.now() - startTime;
 
@@ -307,11 +350,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.insertQueryHistory({
           originalQuery: query,
           queryType: "natural",
-          generatedCypher: dspyResult.cypher_query,
+          generatedCypher: cypherGenResult.cypher_query,
           results: { 
-            reasoning: dspyResult.reasoning, 
+            reasoning: cypherGenResult.reasoning, 
             nodes_count: graphResult.nodes.length,
             edges_count: graphResult.edges.length,
+            cyphergen_execution_time: cypherGenResult.execution_time,
             graph_execution_time: graphResult.executionTime
           },
           executionTime: totalExecutionTime
@@ -322,12 +366,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         success: true,
-        query_type: dspyResult.query_type,
-        cypher_query: dspyResult.cypher_query,
-        reasoning: dspyResult.reasoning,
-        time_context: dspyResult.time_context,
+        query_type: "natural",
+        cypher_query: cypherGenResult.cypher_query,
+        reasoning: cypherGenResult.reasoning,
         nodes: graphResult.nodes,
         edges: graphResult.edges,
+        scalarResults: graphResult.scalarResults,
+        cyphergen_execution_time: cypherGenResult.execution_time,
         graph_execution_time: graphResult.executionTime,
         total_execution_time: totalExecutionTime
       });
@@ -426,14 +471,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Multi-hop Agent Status
-  app.get("/api/agent/multi-hop/status", async (req, res) => {
+  // CypherGen Agent Status
+  app.get("/api/agent/cyphergen/status", async (req, res) => {
     try {
-      const isWorking = await multiHopAgent.test();
+      const isWorking = await cypherGenAgent.test();
       res.json({ 
         status: isWorking ? "operational" : "error",
-        agent_type: "Multi-Hop DSPy",
-        capabilities: ["complex_reasoning", "multi_step_retrieval", "graph_traversal", "temporal_analysis"]
+        agent_type: "CypherGen DSPy",
+        capabilities: ["natural_language_to_cypher", "graph_query_generation", "financial_entity_queries"]
       });
     } catch (error) {
       res.json({ 
@@ -463,14 +508,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Processing natural language query for graph: ${query}`);
       const startTime = Date.now();
       
-      // Process query with DSPy agent (with temporal context if provided)
-      const dspyResult = await dspyAgent.processNaturalQueryWithTemporal(query, startDate, endDate, granularity);
+      // Process query with CypherGen agent (temporal context not yet supported)
+      const cypherResult = await cypherGenAgent.generateCypherQuery(query);
       
-      if (dspyResult.query_type === 'error') {
+      if (cypherResult.error) {
         return res.json({
           success: false,
-          error: dspyResult.error,
-          reasoning: dspyResult.reasoning,
+          error: cypherResult.error,
+          reasoning: cypherResult.reasoning,
           nodes: [],
           edges: [],
           execution_time: Date.now() - startTime
@@ -479,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Execute Cypher query and get graph results
       const graphStartTime = Date.now();
-      const graphResult = await puppyGraphClient.executeQuery(dspyResult.cypher_query);
+      const graphResult = await puppyGraphClient.executeQuery(cypherResult.cypher_query);
       const graphExecutionTime = Date.now() - graphStartTime;
       
       const totalExecutionTime = Date.now() - startTime;
@@ -489,11 +534,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.insertQueryHistory({
           originalQuery: query,
           queryType: "natural",
-          generatedCypher: dspyResult.cypher_query,
+          generatedCypher: cypherResult.cypher_query,
           results: { 
-            reasoning: dspyResult.reasoning, 
-            query_type: dspyResult.query_type,
-            time_context: dspyResult.time_context,
+            reasoning: cypherResult.reasoning, 
+            execution_time: cypherResult.execution_time,
             temporal_params: { startDate, endDate, granularity },
             nodes_count: graphResult.nodes.length,
             edges_count: graphResult.edges.length
@@ -506,10 +550,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         success: true,
-        query_type: dspyResult.query_type,
-        cypher_query: dspyResult.cypher_query,
-        reasoning: dspyResult.reasoning,
-        time_context: dspyResult.time_context,
+        query_type: "natural",
+        cypher_query: cypherResult.cypher_query,
+        reasoning: cypherResult.reasoning,
         nodes: graphResult.nodes,
         edges: graphResult.edges,
         graph_execution_time: graphExecutionTime,
@@ -578,8 +621,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Multi-hop Query with Graph Results  
-  app.post("/api/graph/multi-hop", async (req, res) => {
+  // CypherGen Query with Graph Results  
+  app.post("/api/graph/cyphergen", async (req, res) => {
     try {
       const { query, max_hops = 3, startDate, endDate, granularity } = req.body;
       
@@ -587,69 +630,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Query is required and must be a string" });
       }
 
-      console.log(`Processing multi-hop graph query: ${query}`);
+      console.log(`Processing CypherGen graph query: ${query}`);
       const startTime = Date.now();
       
-      // Use temporal-aware processing if temporal parameters are provided
-      const result = (startDate || endDate || granularity) 
-        ? await multiHopAgent.processComplexQueryWithTemporal(query, max_hops, startDate, endDate, granularity)
-        : await multiHopAgent.processComplexQuery(query, max_hops);
-      const totalExecutionTime = Date.now() - startTime;
-
-      if (result.error) {
+      // Generate Cypher query using CypherGen agent
+      const cypherGenResult = await cypherGenAgent.generateCypherQuery(query);
+      
+      if (cypherGenResult.error) {
         return res.json({
           success: false,
-          error: result.error,
-          reasoning: result.reasoning,
-          hops: result.hops,
+          error: cypherGenResult.error,
+          reasoning: cypherGenResult.reasoning,
           nodes: [],
           edges: [],
-          execution_time: totalExecutionTime
+          execution_time: Date.now() - startTime
         });
       }
 
-      // Transform edge format: final_edges use from_id/to_id, frontend expects fromId/toId
-      const transformedEdges = result.final_edges.map(edge => ({
-        id: edge.id,
-        fromId: edge.from_id,
-        toId: edge.to_id,
-        label: edge.label,
-        properties: edge.properties
-      }));
+      // Execute the generated Cypher query on the graph
+      const graphStartTime = Date.now();
+      const graphResult = await puppyGraphClient.executeQuery(cypherGenResult.cypher_query);
+      const graphExecutionTime = Date.now() - graphStartTime;
+      const totalExecutionTime = Date.now() - startTime;
 
       // Save to history
       try {
         await storage.insertQueryHistory({
           originalQuery: query,
-          queryType: "multi-hop",
-          generatedCypher: result.cypher_queries.join('; '),
+          queryType: "cyphergen",
+          generatedCypher: cypherGenResult.cypher_query,
           results: { 
-            reasoning: result.reasoning,
-            hops: result.hops,
-            nodes_count: result.final_nodes.length,
-            edges_count: result.final_edges.length
+            reasoning: cypherGenResult.reasoning,
+            nodes_count: graphResult.nodes.length,
+            edges_count: graphResult.edges.length,
+            cyphergen_execution_time: cypherGenResult.execution_time,
+            graph_execution_time: graphExecutionTime
           },
           executionTime: totalExecutionTime
         });
       } catch (historyError) {
-        console.warn("Failed to save query history:", historyError);
+        console.warn("Failed to save CypherGen query history:", historyError);
       }
 
       res.json({
         success: true,
-        reasoning: result.reasoning,
-        hops: result.hops,
-        cypher_queries: result.cypher_queries,
-        nodes: result.final_nodes,
-        edges: transformedEdges,
-        multi_hop_execution_time: result.execution_time,
+        cypher_query: cypherGenResult.cypher_query,
+        reasoning: cypherGenResult.reasoning,
+        nodes: graphResult.nodes,
+        edges: graphResult.edges,
+        scalarResults: graphResult.scalarResults,
+        cyphergen_execution_time: cypherGenResult.execution_time,
+        graph_execution_time: graphExecutionTime,
         total_execution_time: totalExecutionTime
       });
 
     } catch (error) {
-      console.error("Error processing multi-hop graph query:", error);
+      console.error("Error processing CypherGen graph query:", error);
       res.status(500).json({ 
-        error: "Failed to process multi-hop query",
+        error: "Failed to process CypherGen query",
         details: error instanceof Error ? error.message : "Unknown error",
         nodes: [],
         edges: []

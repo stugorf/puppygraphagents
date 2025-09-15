@@ -1,89 +1,71 @@
 """
-Multi-hop retrieval agent using DSPy for temporal knowledge graph exploration.
-This agent performs complex graph traversals using OpenAI tool calling.
+CypherGen agent using DSPy for natural language to Cypher query generation.
+This agent takes natural language questions and generates Cypher queries for the knowledge graph.
 """
 
 import json
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+import os
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 import dspy
-from datetime import datetime, timedelta
+from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (look in project root)
+# Get the directory of this file, then go up two levels to project root
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.join(current_dir, '..', '..')
+env_path = os.path.join(project_root, '.env')
+load_dotenv(env_path)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @dataclass
-class GraphNode:
-    id: str
-    label: str
-    properties: Dict[str, Any]
-
-@dataclass
-class GraphEdge:
-    id: str
-    from_id: str
-    to_id: str
-    label: str
-    properties: Dict[str, Any]
-
-@dataclass
-class MultiHopResult:
-    """Result of a multi-hop retrieval operation"""
+class CypherGenResult:
+    """Result of a Cypher generation operation"""
     query: str
+    cypher_query: str
     reasoning: str
-    hops: List[Dict[str, Any]]
-    final_nodes: List[GraphNode]
-    final_edges: List[GraphEdge]
     execution_time: float
-    cypher_queries: List[str]
     error: Optional[str] = None
-
-class MultiHopRetrieval(dspy.Signature):
-    """
-    Analyze a complex question and break it down into sequential graph traversal steps.
-    Each step should be a specific query that builds upon previous results.
-    """
-    
-    question = dspy.InputField(desc="Complex multi-hop question about the knowledge graph")
-    context = dspy.InputField(desc="Available entity types: Company, Person, Rating, Transaction, RegulatoryEvent. Relationships: EMPLOYED_BY, HAS_RATING, PARTICIPATES_IN, TARGET_OF, SUBJECT_TO")
-    
-    plan = dspy.OutputField(desc="JSON list of sequential steps, each with 'step_number', 'description', 'cypher_template', 'expected_entities'")
-    reasoning = dspy.OutputField(desc="Explanation of the multi-hop strategy and why these steps will answer the question")
 
 class CypherGeneration(dspy.Signature):
     """
-    Generate a specific Cypher query for one step of multi-hop retrieval.
+    Convert natural language queries into openCypher queries for PuppyGraph.
+    
+    Generate precise openCypher queries that work with PuppyGraph's openCypher implementation.
+    Use MATCH, RETURN, WHERE, ORDER BY, LIMIT clauses. 
+    
+    IMPORTANT: Always return specific properties explicitly instead of whole node objects.
+    For example, use "RETURN c.name, c.sector, c.industry" instead of "RETURN c".
+    This ensures properties are properly returned in the results.
     """
     
-    step_description = dspy.InputField(desc="Description of what this step should accomplish")
-    previous_results = dspy.InputField(desc="JSON representation of nodes/edges from previous steps (empty if first step)")
-    target_entities = dspy.InputField(desc="Types of entities we're looking for in this step")
-    
-    cypher_query = dspy.OutputField(desc="Cypher query for this specific step")
-    reasoning = dspy.OutputField(desc="Brief explanation of how this query achieves the step goal")
+    natural_query: str = dspy.InputField(desc="Natural language query about entities and relationships")
+    schema_context: str = dspy.InputField(desc="Graph schema information including node types, properties, and relationships")
+    cypher_query: str = dspy.OutputField(desc="openCypher query that retrieves the requested information from the knowledge graph")
+    reasoning: str = dspy.OutputField(desc="Brief explanation of how the query maps to the graph structure")
 
-class ResultAnalysis(dspy.Signature):
+class CypherGenAgent:
     """
-    Analyze multi-hop retrieval results and determine if the question has been fully answered.
-    """
-    
-    original_question = dspy.InputField(desc="The original complex question")
-    all_results = dspy.InputField(desc="JSON representation of all nodes and edges collected from all hops")
-    
-    answer = dspy.OutputField(desc="Complete answer to the original question based on the retrieved data")
-    completeness = dspy.OutputField(desc="Assessment of whether the question was fully answered (complete/partial/incomplete)")
-    missing_info = dspy.OutputField(desc="Description of any missing information needed to fully answer the question")
-
-class MultiHopAgent:
-    """
-    Agent that performs multi-hop retrieval using DSPy for complex graph queries
+    Agent that converts natural language queries to Cypher queries using DSPy
     """
     
-    def __init__(self, openrouter_api_key: str, openrouter_api_base: str = "https://openrouter.ai/api/v1"):
+    def __init__(self, openrouter_api_key: str = None, openrouter_api_base: str = None, schema_context: str = None):
+        # Get API credentials from environment if not provided
+        if openrouter_api_key is None:
+            openrouter_api_key = os.getenv('OPEN_ROUTER_KEY')
+        if openrouter_api_base is None:
+            openrouter_api_base = os.getenv('OPEN_ROUTER_API_BASE', 'https://openrouter.ai/api/v1')
+        
+        # Validate API key
+        if not openrouter_api_key or openrouter_api_key == 'your_openrouter_api_key_here':
+            raise ValueError("OPEN_ROUTER_KEY environment variable not set or using placeholder value. Please set a real OpenRouter API key in the .env file.")
+        
         # Configure DSPy with OpenRouter using the modern API
-        import os
         os.environ['OPEN_ROUTER_KEY'] = openrouter_api_key
         os.environ['OPEN_ROUTER_API_BASE'] = openrouter_api_base
         
@@ -96,300 +78,121 @@ class MultiHopAgent:
         )
         dspy.configure(lm=lm)
         
-        # Initialize DSPy modules
-        self.planner = dspy.ChainOfThought(MultiHopRetrieval)
+        # Initialize DSPy module
         self.cypher_generator = dspy.ChainOfThought(CypherGeneration)
-        self.result_analyzer = dspy.ChainOfThought(ResultAnalysis)
         
-        logger.info("MultiHopAgent initialized with OpenRouter GPT-4o-mini")
+        # Store schema context
+        self.schema_context = schema_context or self._get_default_schema()
+        
+        logger.info("CypherGenAgent initialized with OpenRouter GPT-4o-mini")
     
-    def process_complex_query(self, question: str, max_hops: int = 3) -> MultiHopResult:
+    def _get_default_schema(self) -> str:
+        """Get default schema as fallback when dynamic schema is not available"""
+        return """
+        The knowledge graph contains:
+        - Company nodes (id, name, ticker, sector, industry, market_cap, founded_year, headquarters)
+        - Person nodes (id, name, title, age, nationality, education) 
+        - Rating nodes (id, rating, rating_agency, rating_type, valid_from, valid_to)
+        - Transaction nodes (id, type, value, currency, status, announced_date, completed_date, description)
+        - RegulatoryEvent nodes (id, event_type, regulator, description, amount, currency, event_date, resolution_date, status)
+        
+        Relationships:
+        - EMPLOYED_BY: Person -> Company (with position, start_date, end_date, salary)
+        - HAS_RATING: Company -> Rating
+        - PARTICIPATES_IN: Company -> Transaction (as acquirer)
+        - TARGET_OF: Company -> Transaction (as target)
+        - SUBJECT_TO: Company -> RegulatoryEvent
         """
-        Process a complex question using multi-hop retrieval
+    
+    def update_schema(self, schema_context: str):
+        """Update the schema context for the agent"""
+        self.schema_context = schema_context
+        logger.info("Schema context updated")
+    
+    def generate_cypher_query(self, question: str) -> CypherGenResult:
+        """
+        Generate a Cypher query from a natural language question
         
         Args:
-            question: Complex question requiring multiple graph traversals
-            max_hops: Maximum number of hops to perform
+            question: Natural language question about the knowledge graph
             
         Returns:
-            MultiHopResult containing the complete retrieval process and results
+            CypherGenResult containing the generated Cypher query and reasoning
         """
         start_time = datetime.now()
         
         try:
-            logger.info(f"Processing complex query: {question}")
+            logger.info(f"Generating Cypher query for: {question}")
             
-            # Step 1: Plan the multi-hop strategy
-            context = """
-            Available entity types: Company, Person, Rating, Transaction, RegulatoryEvent
-            Relationships: EMPLOYED_BY (Person->Company), HAS_RATING (Company->Rating), 
-            PARTICIPATES_IN (Company->Transaction), TARGET_OF (Company->RegulatoryEvent), 
-            SUBJECT_TO (Company->RegulatoryEvent)
-            """
-            
-            plan_result = self.planner(question=question, context=context)
-            
-            # Parse the plan (handle markdown code blocks)
-            try:
-                plan_text = plan_result.plan.strip()
-                
-                # Remove markdown code blocks if present
-                if plan_text.startswith('```json'):
-                    plan_text = plan_text[7:]  # Remove ```json
-                if plan_text.startswith('```'):
-                    plan_text = plan_text[3:]   # Remove ```
-                if plan_text.endswith('```'):
-                    plan_text = plan_text[:-3]  # Remove ending ```
-                
-                plan_text = plan_text.strip()
-                steps = json.loads(plan_text)
-                
-                if not isinstance(steps, list):
-                    steps = []
-            except (json.JSONDecodeError, AttributeError) as e:
-                logger.error(f"Failed to parse plan: {plan_result.plan}")
-                logger.error(f"JSON parse error: {str(e)}")
-                return MultiHopResult(
-                    query=question,
-                    reasoning="Failed to parse multi-hop plan",
-                    hops=[],
-                    final_nodes=[],
-                    final_edges=[],
-                    execution_time=0.0,
-                    cypher_queries=[],
-                    error=f"Plan parsing failed: {str(e)}"
-                )
-            
-            logger.info(f"Generated plan with {len(steps)} steps")
-            
-            # Step 2: Execute each hop
-            all_nodes = []
-            all_edges = []
-            hop_results = []
-            cypher_queries = []
-            
-            for i, step in enumerate(steps[:max_hops]):
-                try:
-                    logger.info(f"Executing hop {i+1}: {step.get('description', 'Unknown step')}")
-                    
-                    # Generate Cypher for this step
-                    previous_results = json.dumps({
-                        "nodes": [self._node_to_dict(n) for n in all_nodes],
-                        "edges": [self._edge_to_dict(e) for e in all_edges]
-                    })
-                    
-                    cypher_result = self.cypher_generator(
-                        step_description=step.get('description', ''),
-                        previous_results=previous_results,
-                        target_entities=step.get('expected_entities', 'Any')
-                    )
-                    
-                    cypher_query = cypher_result.cypher_query
-                    cypher_queries.append(cypher_query)
-                    
-                    # Execute the query (this would call the graph execution engine)
-                    hop_nodes, hop_edges = self._execute_cypher_step(cypher_query)
-                    
-                    # Accumulate results
-                    all_nodes.extend(hop_nodes)
-                    all_edges.extend(hop_edges)
-                    
-                    # Record hop result
-                    hop_results.append({
-                        "step_number": i + 1,
-                        "description": step.get('description', ''),
-                        "cypher_query": cypher_query,
-                        "reasoning": cypher_result.reasoning,
-                        "nodes_found": len(hop_nodes),
-                        "edges_found": len(hop_edges)
-                    })
-                    
-                    logger.info(f"Hop {i+1} completed: {len(hop_nodes)} nodes, {len(hop_edges)} edges")
-                    
-                except Exception as e:
-                    logger.error(f"Error in hop {i+1}: {str(e)}")
-                    hop_results.append({
-                        "step_number": i + 1,
-                        "description": step.get('description', ''),
-                        "error": str(e)
-                    })
-            
-            # Step 3: Analyze final results
-            all_results_json = json.dumps({
-                "nodes": [self._node_to_dict(n) for n in all_nodes],
-                "edges": [self._edge_to_dict(e) for e in all_edges]
-            })
-            
-            analysis = self.result_analyzer(
-                original_question=question,
-                all_results=all_results_json
+            # Generate Cypher query using DSPy
+            result = self.cypher_generator(
+                natural_query=question,
+                schema_context=self.schema_context
             )
             
             # Calculate execution time
             execution_time = (datetime.now() - start_time).total_seconds()
             
-            logger.info(f"Multi-hop retrieval completed in {execution_time:.2f}s")
+            logger.info(f"Cypher generation completed in {execution_time:.2f}s")
             
-            return MultiHopResult(
+            return CypherGenResult(
                 query=question,
-                reasoning=f"Multi-hop plan: {plan_result.reasoning}\n\nFinal analysis: {analysis.answer}",
-                hops=hop_results,
-                final_nodes=self._deduplicate_nodes(all_nodes),
-                final_edges=all_edges,
-                execution_time=execution_time,
-                cypher_queries=cypher_queries
+                cypher_query=result.cypher_query,
+                reasoning=result.reasoning,
+                execution_time=execution_time
             )
             
         except Exception as e:
-            logger.error(f"Error in multi-hop processing: {str(e)}")
+            logger.error(f"Error in Cypher generation: {str(e)}")
             execution_time = (datetime.now() - start_time).total_seconds()
             
-            return MultiHopResult(
+            return CypherGenResult(
                 query=question,
-                reasoning=f"Error during multi-hop processing: {str(e)}",
-                hops=[],
-                final_nodes=[],
-                final_edges=[],
+                cypher_query="",
+                reasoning=f"Error during Cypher generation: {str(e)}",
                 execution_time=execution_time,
-                cypher_queries=[],
                 error=str(e)
             )
     
-    def _execute_cypher_step(self, cypher_query: str) -> Tuple[List[GraphNode], List[GraphEdge]]:
-        """
-        Execute a single Cypher query step.
-        In a real implementation, this would call the PuppyGraph client.
-        For now, return simulated results based on the query.
-        """
-        # This is a simplified simulation - in practice this would call
-        # the PuppyGraph client or make an API call to execute the query
-        
-        nodes = []
-        edges = []
-        
-        # Simple pattern matching to simulate query execution
-        query_lower = cypher_query.lower()
-        
-        if "company" in query_lower and "financial services" in query_lower:
-            # Simulate finding financial services companies
-            nodes.append(GraphNode(
-                id="company_1",
-                label="Company",
-                properties={
-                    "name": "Goldman Sachs Group Inc",
-                    "sector": "Financial Services",
-                    "ticker": "GS"
-                }
-            ))
-            
-        if "person" in query_lower and "ceo" in query_lower:
-            # Simulate finding CEO
-            nodes.append(GraphNode(
-                id="person_1",
-                label="Person",
-                properties={
-                    "name": "David M. Solomon",
-                    "title": "CEO",
-                    "age": 62
-                }
-            ))
-            
-            # Add employment relationship
-            edges.append(GraphEdge(
-                id="emp_1",
-                from_id="person_1",
-                to_id="company_1",
-                label="EMPLOYED_BY",
-                properties={"position": "Chief Executive Officer"}
-            ))
-        
-        if "rating" in query_lower:
-            # Simulate finding ratings
-            nodes.append(GraphNode(
-                id="rating_1",
-                label="Rating",
-                properties={
-                    "rating": "A+",
-                    "rating_agency": "S&P Global",
-                    "rating_type": "Long-term Credit"
-                }
-            ))
-            
-            edges.append(GraphEdge(
-                id="rating_edge_1",
-                from_id="company_1",
-                to_id="rating_1",
-                label="HAS_RATING",
-                properties={}
-            ))
-        
-        return nodes, edges
-    
-    def _node_to_dict(self, node: GraphNode) -> Dict[str, Any]:
-        """Convert GraphNode to dictionary for JSON serialization"""
-        return {
-            "id": node.id,
-            "label": node.label,
-            "properties": node.properties
-        }
-    
-    def _edge_to_dict(self, edge: GraphEdge) -> Dict[str, Any]:
-        """Convert GraphEdge to dictionary for JSON serialization"""
-        return {
-            "id": edge.id,
-            "from_id": edge.from_id,
-            "to_id": edge.to_id,
-            "label": edge.label,
-            "properties": edge.properties
-        }
-    
-    def _deduplicate_nodes(self, nodes: List[GraphNode]) -> List[GraphNode]:
-        """Remove duplicate nodes based on ID"""
-        seen_ids = set()
-        unique_nodes = []
-        
-        for node in nodes:
-            if node.id not in seen_ids:
-                seen_ids.add(node.id)
-                unique_nodes.append(node)
-        
-        return unique_nodes
-    
     def test(self) -> bool:
-        """Test if the multi-hop agent is working"""
+        """Test if the CypherGen agent is working"""
         try:
-            test_question = "Find companies and their executives"
-            result = self.process_complex_query(test_question, max_hops=1)
-            return result.error is None
+            test_question = "Show me all companies in the financial services sector"
+            result = self.generate_cypher_query(test_question)
+            return result.error is None and result.cypher_query.strip() != ""
         except Exception as e:
-            logger.error(f"Multi-hop agent test failed: {str(e)}")
+            logger.error(f"CypherGen agent test failed: {str(e)}")
             return False
 
 # Example usage and testing
 if __name__ == "__main__":
-    import os
-    
-    # Get API key and base URL from environment
-    api_key = os.getenv("OPEN_ROUTER_KEY")
-    api_base = os.getenv("OPEN_ROUTER_API_BASE", "https://openrouter.ai/api/v1")
-    if not api_key:
-        print("OPEN_ROUTER_KEY environment variable not set")
+    try:
+        # Initialize agent (will get API key from environment)
+        agent = CypherGenAgent()
+    except ValueError as e:
+        print(f"Error: {e}")
         exit(1)
     
-    # Initialize agent
-    agent = MultiHopAgent(api_key, api_base)
+    # Test with example questions
+    test_questions = [
+        "Show me all companies in the financial services sector",
+        "Find CEOs of major banks",
+        "What mergers happened in 2023?",
+        "Show me companies with credit rating downgrades",
+        "Find regulatory fines above $1 billion",
+        "Show me all people employed by technology companies",
+        "Find transactions between companies in the same industry"
+    ]
     
-    # Test with a complex question
-    test_question = "Show me financial services companies, their CEOs, and any credit ratings they have received in the last year"
+    print("🤖 Testing CypherGen Agent")
+    print("=" * 50)
     
-    print(f"Testing multi-hop retrieval with: {test_question}")
-    result = agent.process_complex_query(test_question)
-    
-    print(f"\nReasoning: {result.reasoning}")
-    print(f"Hops executed: {len(result.hops)}")
-    print(f"Final nodes: {len(result.final_nodes)}")
-    print(f"Final edges: {len(result.final_edges)}")
-    print(f"Execution time: {result.execution_time:.2f}s")
-    
-    if result.error:
-        print(f"Error: {result.error}")
+    for question in test_questions:
+        print(f"\n🔍 Query: {question}")
+        result = agent.generate_cypher_query(question)
+        print(f"🧠 Reasoning: {result.reasoning}")
+        print(f"🔗 Cypher: {result.cypher_query}")
+        print(f"⏱️  Time: {result.execution_time:.2f}s")
+        if result.error:
+            print(f"❌ Error: {result.error}")
+        print("-" * 40)
