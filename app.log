@@ -3,8 +3,14 @@
 > NODE_ENV=development tsx server/index.ts
 
 Attempting to connect to PuppyGraph (attempt 1/10)...
-Connected to PuppyGraph via Bolt protocol on port 7687
-PuppyGraph client initialized: Connected to PuppyGraph
+Connection attempt 1 failed: Connection was closed by server
+Retrying in 5000ms...
+Failed to update CypherGen agent schema: Error: PuppyGraph client is not connected. Please ensure PuppyGraph service is running.
+    at PuppyGraphClient.getGraphSchema (/Users/davidhughes/dev/puppygraphagents/server/graph/puppygraph_client.ts:359:13)
+    at updateCypherGenAgentSchema (/Users/davidhughes/dev/puppygraphagents/server/routes.ts:18:43)
+    at registerRoutes (/Users/davidhughes/dev/puppygraphagents/server/routes.ts:62:9)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/index.ts:53:24)
+    at <anonymous> (/Users/davidhughes/dev/puppygraphagents/server/index.ts:80:1)
 node:events:485
       throw er; // Unhandled 'error' event
       ^

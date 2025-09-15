@@ -14,40 +14,22 @@ default:
     @echo "Available commands:"
     @just --list
 
-# Start the application (both frontend and backend)
+# Start the application (all services in Docker)
 start:
     @echo "🚀 Starting Temporal Knowledge Graph application..."
-    @echo "📦 Starting Docker services..."
-    docker-compose up -d postgres puppygraph
+    @echo "📦 Starting all Docker services..."
+    docker-compose up -d
     @echo "⏳ Waiting for services to be ready..."
-    @sleep 10
-    @echo "🌱 Starting application server in background..."
-    @if [ -f .env ]; then \
-        set -a && source .env && set +a && nohup npm run dev > app.log 2>&1 & \
-        echo "✅ Application started in background (PID: $$!)"; \
-        echo "📋 Logs are being written to app.log"; \
-        echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"; \
-        echo "🏥 Health check: http://localhost:{{ DEV_PORT }}/api/health"; \
-        echo "📊 Run 'just status' to check if running"; \
-        echo "📋 Run 'just logs' to view logs"; \
-    else \
-        echo "⚠️  .env file not found, using system environment variables"; \
-        nohup npm run dev > app.log 2>&1 & \
-        echo "✅ Application started in background (PID: $$!)"; \
-        echo "📋 Logs are being written to app.log"; \
-        echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"; \
-        echo "🏥 Health check: http://localhost:{{ DEV_PORT }}/api/health"; \
-        echo "📊 Run 'just status' to check if running"; \
-        echo "📋 Run 'just logs' to view logs"; \
-    fi
+    @sleep 15
+    @echo "✅ All services started in Docker containers"
+    @echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"
+    @echo "🏥 Health check: http://localhost:{{ DEV_PORT }}/api/health"
+    @echo "📊 Run 'just status' to check if running"
+    @echo "📋 Run 'just logs' to view logs"
 
-# Stop the application by killing processes on the development port
+# Stop the application (all Docker services)
 stop:
-    @echo "🛑 Stopping application processes..."
-    -pkill -f "npm run dev" || true
-    -pkill -f "tsx server/index.ts" || true
-    -lsof -ti:{{ DEV_PORT }} | xargs -r kill -9 || true
-    @echo "🐳 Stopping Docker services..."
+    @echo "🛑 Stopping all Docker services..."
     -docker-compose down || echo "⚠️  Docker not running or no containers to stop"
     @echo "✅ Application stopped"
 
@@ -116,35 +98,31 @@ init: setup migrate seed
 # Show application status
 status:
     @echo "📊 Application Status:"
-    @if lsof -i:{{ DEV_PORT }} > /dev/null 2>&1; then \
-        echo "✅ Application is running on port {{ DEV_PORT }}"; \
+    @if docker-compose ps | grep -q "Up"; then \
+        echo "✅ Docker services are running:"; \
+        docker-compose ps; \
         echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"; \
     else \
-        echo "❌ Application is not running"; \
+        echo "❌ No Docker services are running"; \
     fi
 
-# Show logs from the background application
+# Show logs from Docker containers
 logs:
-    @echo "📋 Recent application logs:"
-    @if [ -f "app.log" ]; then \
-        echo "📄 Last 20 lines from app.log:"; \
-        tail -20 app.log; \
+    @echo "📋 Recent Docker container logs:"
+    @if docker-compose ps | grep -q "Up"; then \
+        echo "📄 Last 20 lines from all containers:"; \
+        docker-compose logs --tail=20; \
     else \
-        echo "❌ No log file found (app.log)"; \
-    fi
-    @if pgrep -f "npm run dev" > /dev/null; then \
-        echo "✅ Application is running with PID: $(pgrep -f 'npm run dev')"; \
-    else \
-        echo "❌ No running application process found"; \
+        echo "❌ No running Docker containers found"; \
     fi
 
 # Follow logs in real-time
 follow-logs:
-    @echo "📋 Following application logs (Ctrl+C to stop):"
-    @if [ -f "app.log" ]; then \
-        tail -f app.log; \
+    @echo "📋 Following Docker container logs (Ctrl+C to stop):"
+    @if docker-compose ps | grep -q "Up"; then \
+        docker-compose logs -f; \
     else \
-        echo "❌ No log file found (app.log)"; \
+        echo "❌ No running Docker containers found"; \
     fi
 
 # Clean build artifacts and node_modules
@@ -154,7 +132,6 @@ clean:
     rm -rf dist
     rm -rf .next
     rm -rf .vite
-    rm -f app.log
     @echo "✅ Project cleaned"
 
 # Development helpers
@@ -173,8 +150,8 @@ health:
     else \
         echo "❌ API is not responding"; \
     fi
-    @if [ -f "package.json" ]; then \
-        echo "✅ package.json exists"; \
+    @if docker-compose ps | grep -q "Up"; then \
+        echo "✅ Docker containers are running"; \
     else \
-        echo "❌ package.json missing"; \
+        echo "❌ Docker containers are not running"; \
     fi

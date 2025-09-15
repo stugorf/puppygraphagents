@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Play, RefreshCw, History, Copy, Zap } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Play, RefreshCw, History, Copy, Code } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface GraphNode {
@@ -54,7 +53,8 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
   const [cypherQuery, setCypherQuery] = useState("");
   const [activeTab, setActiveTab] = useState("natural");
   const [isLoading, setIsLoading] = useState(false);
-  const [enableMultiHop, setEnableMultiHop] = useState(false);
+  const [generatedCypherQuery, setGeneratedCypherQuery] = useState("");
+  const [showCypherDialog, setShowCypherDialog] = useState(false);
   const { toast } = useToast();
 
   // Transform backend data to frontend format
@@ -109,28 +109,15 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
       let requestBody: any = {};
 
       if (activeTab === "natural") {
-        if (enableMultiHop) {
-          apiUrl = '/api/graph/multi-hop';
-          requestBody = { 
-            query, 
-            max_hops: 3,
-            ...(temporalParams?.startDate && {
-              startDate: temporalParams.startDate,
-              endDate: temporalParams.endDate,
-              granularity: temporalParams.granularity
-            })
-          };
-        } else {
-          apiUrl = '/api/graph/natural';
-          requestBody = { 
-            query,
-            ...(temporalParams?.startDate && {
-              startDate: temporalParams.startDate,
-              endDate: temporalParams.endDate,
-              granularity: temporalParams.granularity
-            })
-          };
-        }
+        apiUrl = '/api/graph/natural';
+        requestBody = { 
+          query,
+          ...(temporalParams?.startDate && {
+            startDate: temporalParams.startDate,
+            endDate: temporalParams.endDate,
+            granularity: temporalParams.granularity
+          })
+        };
       } else {
         apiUrl = '/api/graph/query';
         requestBody = { cypher_query: query };
@@ -163,6 +150,11 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
       result.execution_time = data.total_execution_time || data.execution_time;
       result.query_type = data.query_type;
       result.cypher_query = data.cypher_query || data.cypher_queries?.join('; ');
+
+      // Store generated Cypher query for natural language queries
+      if (activeTab === "natural" && result.cypher_query) {
+        setGeneratedCypherQuery(result.cypher_query);
+      }
 
       console.log('API response data:', data);
       console.log('Query result with scalarResults:', result);
@@ -236,21 +228,6 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
               data-testid="input-natural-query"
             />
             
-            <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
-              <Switch
-                id="multi-hop"
-                checked={enableMultiHop}
-                onCheckedChange={setEnableMultiHop}
-                data-testid="switch-multi-hop"
-              />
-              <Label htmlFor="multi-hop" className="text-sm">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  Enable Multi-Hop Retrieval
-                </div>
-              </Label>
-            </div>
-            
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Example queries:</p>
               <div className="space-y-1">
@@ -315,6 +292,44 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
             )}
             Execute Query
           </Button>
+          
+          {activeTab === "natural" && generatedCypherQuery && (
+            <Dialog open={showCypherDialog} onOpenChange={setShowCypherDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" data-testid="button-show-cypher">
+                  <Code className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Generated Cypher Query</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg">
+                    <pre className="text-sm font-mono whitespace-pre-wrap overflow-x-auto">
+                      {generatedCypherQuery}
+                    </pre>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedCypherQuery);
+                        toast({
+                          title: "Copied to clipboard",
+                          description: "Cypher query copied to clipboard",
+                        });
+                      }}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Query
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </CardContent>
     </Card>

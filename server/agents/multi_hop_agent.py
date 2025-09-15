@@ -39,9 +39,30 @@ class CypherGeneration(dspy.Signature):
     Generate precise openCypher queries that work with PuppyGraph's openCypher implementation.
     Use MATCH, RETURN, WHERE, ORDER BY, LIMIT clauses. 
     
-    IMPORTANT: Always return specific properties explicitly instead of whole node objects.
-    For example, use "RETURN c.name, c.sector, c.industry" instead of "RETURN c".
-    This ensures properties are properly returned in the results.
+    IMPORTANT QUERY GUIDELINES:
+    1. Always return specific properties explicitly instead of whole node objects.
+       For example, use "RETURN c.name, c.sector, c.industry" instead of "RETURN c".
+       This ensures properties are properly returned in the results.
+    
+    2. Use case-insensitive matching for text fields to handle data inconsistencies:
+       - Use toLower() function for case-insensitive comparisons: WHERE toLower(c.sector) = toLower('financial services')
+       - Use CONTAINS() for partial matches: WHERE toLower(c.sector) CONTAINS toLower('financial')
+       - Use IN clause with toLower() for multiple values: WHERE toLower(c.sector) IN ['financial services', 'banking', 'finance']
+    
+    3. Use fuzzy matching techniques for better query success:
+       - For sector/industry queries: WHERE toLower(c.sector) CONTAINS toLower('financial') OR toLower(c.sector) CONTAINS toLower('banking')
+       - For name searches: WHERE toLower(c.name) CONTAINS toLower('search_term')
+       - For partial matches: Use CONTAINS() instead of exact equality when appropriate
+    
+    4. Handle common variations in data:
+       - 'Financial Services' vs 'financial services' vs 'Finance'
+       - 'Technology' vs 'tech' vs 'IT'
+       - 'Healthcare' vs 'health care' vs 'medical'
+    
+    5. Use OR conditions for related terms:
+       - Financial: 'financial', 'banking', 'finance', 'investment'
+       - Technology: 'technology', 'tech', 'software', 'IT'
+       - Healthcare: 'healthcare', 'health care', 'medical', 'pharmaceutical'
     """
     
     natural_query: str = dspy.InputField(desc="Natural language query about entities and relationships")

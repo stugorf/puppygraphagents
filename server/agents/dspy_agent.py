@@ -19,6 +19,31 @@ class FinancialKnowledgeGraph(dspy.Signature):
     
     Generate precise openCypher queries that work with PuppyGraph's openCypher implementation.
     Use MATCH, RETURN, WHERE, ORDER BY, LIMIT clauses. Return both nodes and relationships when needed.
+    
+    IMPORTANT QUERY GUIDELINES:
+    1. Always return specific properties explicitly instead of whole node objects.
+       For example, use "RETURN c.name, c.sector, c.industry" instead of "RETURN c".
+       This ensures properties are properly returned in the results.
+    
+    2. Use case-insensitive matching for text fields to handle data inconsistencies:
+       - Use toLower() function for case-insensitive comparisons: WHERE LOWER(c.sector) = LOWER('financial services')
+       - Use CONTAINS() for partial matches: WHERE CONTAINS(LOWER(c.sector), LOWER('financial'))
+       - Use IN clause with toLower() for multiple values: WHERE LOWER(c.sector) IN ['financial services', 'banking', 'finance']
+    
+    3. Use fuzzy matching techniques for better query success:
+       - For sector/industry queries: WHERE LOWER(c.sector) CONTAINS LOWER('financial') OR LOWER(c.sector) CONTAINS LOWER('banking')
+       - For name searches: WHERE LOWER(c.name) CONTAINS LOWER('search_term')
+       - For partial matches: Use CONTAINS() instead of exact equality when appropriate
+    
+    4. Handle common variations in data:
+       - 'Financial Services' vs 'financial services' vs 'Finance'
+       - 'Technology' vs 'tech' vs 'IT'
+       - 'Healthcare' vs 'health care' vs 'medical'
+    
+    5. Use OR conditions for related terms:
+       - Financial: 'financial', 'banking', 'finance', 'investment'
+       - Technology: 'technology', 'tech', 'software', 'IT'
+       - Healthcare: 'healthcare', 'health care', 'medical', 'pharmaceutical'
     """
     
     natural_query: str = dspy.InputField(desc="Natural language query about financial entities and relationships")
@@ -36,6 +61,31 @@ class TemporalFinancialQuery(dspy.Signature):
     - Event sequences (e.g., "mergers followed by regulatory actions")
     
     Use proper date/time filtering with WHERE clauses and temporal properties.
+    
+    IMPORTANT QUERY GUIDELINES:
+    1. Always return specific properties explicitly instead of whole node objects.
+       For example, use "RETURN c.name, c.sector, c.industry" instead of "RETURN c".
+       This ensures properties are properly returned in the results.
+    
+    2. Use case-insensitive matching for text fields to handle data inconsistencies:
+       - Use toLower() function for case-insensitive comparisons: WHERE LOWER(c.sector) = LOWER('financial services')
+       - Use CONTAINS() for partial matches: WHERE CONTAINS(LOWER(c.sector), LOWER('financial'))
+       - Use IN clause with toLower() for multiple values: WHERE LOWER(c.sector) IN ['financial services', 'banking', 'finance']
+    
+    3. Use fuzzy matching techniques for better query success:
+       - For sector/industry queries: WHERE LOWER(c.sector) CONTAINS LOWER('financial') OR LOWER(c.sector) CONTAINS LOWER('banking')
+       - For name searches: WHERE LOWER(c.name) CONTAINS LOWER('search_term')
+       - For partial matches: Use CONTAINS() instead of exact equality when appropriate
+    
+    4. Handle common variations in data:
+       - 'Financial Services' vs 'financial services' vs 'Finance'
+       - 'Technology' vs 'tech' vs 'IT'
+       - 'Healthcare' vs 'health care' vs 'medical'
+    
+    5. Use OR conditions for related terms:
+       - Financial: 'financial', 'banking', 'finance', 'investment'
+       - Technology: 'technology', 'tech', 'software', 'IT'
+       - Healthcare: 'healthcare', 'health care', 'medical', 'pharmaceutical'
     """
     
     natural_query: str = dspy.InputField(desc="Temporal natural language query about financial events or relationships")
