@@ -40,9 +40,10 @@ class CypherGeneration(dspy.Signature):
     Use MATCH, RETURN, WHERE, ORDER BY, LIMIT clauses. 
     
     IMPORTANT QUERY GUIDELINES:
-    1. Always return specific properties explicitly instead of whole node objects.
+    1. CRITICAL: Always return specific properties explicitly instead of whole node objects.
        For example, use "RETURN c.name, c.sector, c.industry" instead of "RETURN c".
-       This ensures properties are properly returned in the results.
+       This ensures properties are properly returned in the results and work with Graph/Data views.
+       NEVER use "RETURN c" or "RETURN n" as this returns empty properties.
     
     2. Use case-insensitive matching for text fields to handle data inconsistencies:
        - Use toLower() function for case-insensitive comparisons: WHERE toLower(c.sector) = toLower('financial services')

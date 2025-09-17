@@ -190,8 +190,8 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
       "What companies have employees and what are their credit ratings?"
     ],
     cypher: [
-      "MATCH (c:Company {sector: 'Financial Services'})<-[:EMPLOYED_BY]-(p:Person) RETURN c, p",
-      "MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c, r",
+      "MATCH (c:Company {sector: 'Financial Services'})<-[:EMPLOYED_BY]-(p:Person) RETURN c.name, c.ticker, c.sector, p.name, p.title",
+      "MATCH (c:Company)-[:HAS_RATING]->(r:Rating) RETURN c.name, c.ticker, r.rating, r.rating_agency",
       "MATCH (c:Company)<-[:EMPLOYED_BY]-(p:Person) WHERE c.sector = 'Financial Services' RETURN c.name, p.name, p.title LIMIT 10"
     ]
   };
