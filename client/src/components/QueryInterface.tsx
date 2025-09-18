@@ -119,7 +119,8 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
           })
         };
       } else {
-        apiUrl = '/api/graph/query';
+        // Use simplified endpoint for better data structure
+        apiUrl = '/api/graph/query/simplified';
         requestBody = { cypher_query: query };
       }
 
@@ -143,7 +144,19 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
       }
 
       // Transform the backend data to frontend format
-      const result = transformGraphData(data.nodes || [], data.edges || [], data.scalarResults || []);
+      let result: QueryResult;
+      
+      if (activeTab === "cypher" && data.nodes && data.edges) {
+        // Simplified endpoint returns pre-formatted data
+        result = {
+          nodes: data.nodes || [],
+          edges: data.edges || [],
+          scalarResults: data.scalarResults || []
+        };
+      } else {
+        // Natural language endpoint returns legacy format
+        result = transformGraphData(data.nodes || [], data.edges || [], data.scalarResults || []);
+      }
       
       // Add metadata
       result.reasoning = data.reasoning;

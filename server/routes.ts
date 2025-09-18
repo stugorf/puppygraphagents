@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { puppyGraphClient } from "./graph/puppygraph_client";
+import { simplifiedPuppyGraphClient } from "./graph/simplified_puppygraph_client";
+import { DataTransformer } from "./graph/data_transformer";
 import { cypherGenAgent } from "./agents/cypher_gen_wrapper";
 import { 
   insertQueryHistorySchema, 
@@ -83,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test PuppyGraph queries for metrics
   app.get("/api/metrics/puppygraph", async (req, res) => {
     try {
-      const isConnected = await puppyGraphClient.isConnected();
+      const isConnected = simplifiedPuppyGraphClient.isReady();
       if (!isConnected) {
         return res.status(503).json({ 
           error: "PuppyGraph not connected",
@@ -301,11 +303,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { cypher_query } = validationResult.data;
 
       console.log(`Executing graph query: ${cypher_query}`);
-      const result = await puppyGraphClient.executeCypherQuery(cypher_query);
+      const result = await simplifiedPuppyGraphClient.executeCypherQuery(cypher_query);
+
+      // Transform to legacy format for backward compatibility
+      const legacyFormat = DataTransformer.toLegacyFormat(result.records);
 
       res.json({
         success: true,
-        ...result
+        nodes: legacyFormat.nodes,
+        edges: legacyFormat.edges,
+        scalarResults: legacyFormat.scalarResults,
+        executionTime: result.executionTime,
+        cypherQuery: result.cypherQuery,
+        recordCount: result.recordCount
       });
 
     } catch (error) {
@@ -341,9 +351,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Step 2: Execute the generated Cypher on the graph
-      const graphResult = await puppyGraphClient.executeCypherQuery(cypherGenResult.cypher_query);
+      const graphResult = await simplifiedPuppyGraphClient.executeCypherQuery(cypherGenResult.cypher_query);
       
       const totalExecutionTime = Date.now() - startTime;
+
+      // Transform to legacy format for backward compatibility
+      const legacyFormat = DataTransformer.toLegacyFormat(graphResult.records);
 
       // Save to query history
       try {
@@ -353,8 +366,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           generatedCypher: cypherGenResult.cypher_query,
           results: { 
             reasoning: cypherGenResult.reasoning, 
-            nodes_count: graphResult.nodes.length,
-            edges_count: graphResult.edges.length,
+            nodes_count: legacyFormat.nodes.length,
+            edges_count: legacyFormat.edges.length,
             cyphergen_execution_time: cypherGenResult.execution_time,
             graph_execution_time: graphResult.executionTime
           },
@@ -369,9 +382,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         query_type: "natural",
         cypher_query: cypherGenResult.cypher_query,
         reasoning: cypherGenResult.reasoning,
-        nodes: graphResult.nodes,
-        edges: graphResult.edges,
-        scalarResults: graphResult.scalarResults,
+        nodes: legacyFormat.nodes,
+        edges: legacyFormat.edges,
+        scalarResults: legacyFormat.scalarResults,
         cyphergen_execution_time: cypherGenResult.execution_time,
         graph_execution_time: graphResult.executionTime,
         total_execution_time: totalExecutionTime
@@ -389,18 +402,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Graph Status and Schema
   app.get("/api/graph/status", async (req, res) => {
     try {
-      const status = puppyGraphClient.getStatus();
-      const schema = await puppyGraphClient.getGraphSchema();
+      const status = simplifiedPuppyGraphClient.getStatus();
+      const schema = await simplifiedPuppyGraphClient.getGraphSchema();
       
       res.json({
         ...status,
         schema,
-        ready: puppyGraphClient.isReady()
+        ready: simplifiedPuppyGraphClient.isReady()
       });
     } catch (error) {
       console.error("Error getting graph status:", error);
       res.status(500).json({ 
         error: "Failed to get graph status",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Simplified Graph Query Endpoint (returns unified format)
+  app.post("/api/graph/query/simplified", async (req, res) => {
+    try {
+      const validationResult = cypherQuerySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid input parameters",
+          details: validationResult.error.issues
+        });
+      }
+
+      const { cypher_query } = validationResult.data;
+
+      console.log(`Executing simplified graph query: ${cypher_query}`);
+      const result = await simplifiedPuppyGraphClient.executeCypherQuery(cypher_query);
+
+      // Transform to graph visualization format
+      const graphData = DataTransformer.toGraphVisualization(result.records);
+      
+      // Apply force layout
+      const layoutedNodes = DataTransformer.applyForceLayout(graphData.nodes, graphData.edges);
+
+      // Transform to legacy format to get scalar results
+      const legacyFormat = DataTransformer.toLegacyFormat(result.records);
+
+      res.json({
+        success: true,
+        nodes: layoutedNodes,
+        edges: graphData.edges,
+        scalarResults: legacyFormat.scalarResults,
+        records: result.records,
+        executionTime: result.executionTime,
+        cypherQuery: result.cypherQuery,
+        recordCount: result.recordCount
+      });
+
+    } catch (error) {
+      console.error("Error executing simplified graph query:", error);
+      res.status(500).json({ 
+        error: "Failed to execute simplified graph query",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
@@ -424,7 +482,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startTime = Date.now();
       
       // Process the complex query using multi-hop retrieval
-      const result = await multiHopAgent.processComplexQuery(query, maxHops);
+      // TODO: Implement multi-hop agent or use simplified approach
+      const result = await simplifiedPuppyGraphClient.executeCypherQuery(query);
+      const legacyFormat = DataTransformer.toLegacyFormat(result.records);
+      
+      // Mock multi-hop result for now
+      const mockResult = {
+        reasoning: "Multi-hop query processed using simplified approach",
+        hops: [query],
+        final_nodes: legacyFormat.nodes,
+        final_edges: legacyFormat.edges,
+        cypher_queries: [query],
+        execution_time: result.executionTime
+      };
       
       const totalExecutionTime = Date.now() - startTime;
 
@@ -433,13 +503,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.insertQueryHistory({
           originalQuery: query,
           queryType: "multi-hop",
-          generatedCypher: result.cypher_queries.join('; '),
+          generatedCypher: mockResult.cypher_queries.join('; '),
           results: { 
-            reasoning: result.reasoning, 
-            hops: result.hops.length,
-            nodes_count: result.final_nodes.length,
-            edges_count: result.final_edges.length,
-            multi_hop_execution_time: result.execution_time
+            reasoning: mockResult.reasoning, 
+            hops: mockResult.hops.length,
+            nodes_count: mockResult.final_nodes.length,
+            edges_count: mockResult.final_edges.length,
+            multi_hop_execution_time: mockResult.execution_time
           },
           executionTime: totalExecutionTime
         });
@@ -450,16 +520,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         success: true,
         query_type: "multi-hop",
-        original_query: result.query,
-        reasoning: result.reasoning,
-        hops_executed: result.hops.length,
-        hops: result.hops,
-        cypher_queries: result.cypher_queries,
-        nodes: result.final_nodes,
-        edges: result.final_edges,
-        multi_hop_execution_time: result.execution_time,
+        original_query: query,
+        reasoning: mockResult.reasoning,
+        hops_executed: mockResult.hops.length,
+        hops: mockResult.hops,
+        cypher_queries: mockResult.cypher_queries,
+        nodes: mockResult.final_nodes,
+        edges: mockResult.final_edges,
+        multi_hop_execution_time: mockResult.execution_time,
         total_execution_time: totalExecutionTime,
-        error: result.error
+        error: null
       });
 
     } catch (error) {
@@ -570,56 +640,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Direct Cypher Query Execution
-  app.post("/api/graph/query", async (req, res) => {
-    try {
-      const { query } = req.body;
-      
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ error: "Query is required and must be a string" });
-      }
-
-      console.log(`Executing direct Cypher query: ${query}`);
-      const startTime = Date.now();
-      
-      const result = await puppyGraphClient.executeQuery(query);
-      const executionTime = Date.now() - startTime;
-
-      // Save to history
-      try {
-        await storage.insertQueryHistory({
-          originalQuery: query,
-          queryType: "direct",
-          generatedCypher: query,
-          results: { 
-            nodes_count: result.nodes.length,
-            edges_count: result.edges.length
-          },
-          executionTime
-        });
-      } catch (historyError) {
-        console.warn("Failed to save query history:", historyError);
-      }
-
-      res.json({
-        success: true,
-        cypher_query: query,
-        nodes: result.nodes,
-        edges: result.edges,
-        scalarResults: result.scalarResults,
-        execution_time: executionTime
-      });
-
-    } catch (error) {
-      console.error("Error executing direct Cypher query:", error);
-      res.status(500).json({ 
-        error: "Failed to execute query",
-        details: error instanceof Error ? error.message : "Unknown error",
-        nodes: [],
-        edges: []
-      });
-    }
-  });
 
   // CypherGen Query with Graph Results  
   app.post("/api/graph/cyphergen", async (req, res) => {

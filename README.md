@@ -22,27 +22,36 @@ A sophisticated temporal knowledge graph application that combines DSPy agents, 
 
 ## Quick Start with Docker
 
-1. **Clone the repository**
-   ```bash
-   git clone [repository-url]
-   cd temporal-knowledge-graph
-   ```
+### Development Mode (Recommended for Development)
+```bash
+# Clone the repository
+git clone [repository-url]
+cd temporal-knowledge-graph
 
-2. **Set up environment**
-   ```bash
-   cp .env.template .env
-   # Edit .env with your OpenAI API key
-   ```
+# Set up environment
+cp env.example .env
+# Edit .env with your API keys
 
-3. **Start with Docker Compose**
-   ```bash
-   docker-compose up -d
-   ```
+# Start development mode with hot reloading
+./dev.sh dev
+```
 
-4. **Access the application**
-   - Web App: http://localhost:5000
-   - PuppyGraph UI: http://localhost:8081
-   - PostgreSQL: localhost:5432
+### Production Mode (For Testing/Deployment)
+```bash
+# Start production mode
+./dev.sh prod
+```
+
+### Access the Application
+- **Web App**: http://localhost:5000
+- **PuppyGraph UI**: http://localhost:8081
+- **PostgreSQL**: localhost:5432
+
+### Development vs Production
+- **Development Mode**: Hot reloading, no rebuilds needed for code changes
+- **Production Mode**: Optimized build, requires rebuild for changes
+
+For detailed development instructions, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Development Setup
 

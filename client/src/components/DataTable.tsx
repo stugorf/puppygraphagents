@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,19 +83,61 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
     return records;
   };
 
-  // Transform scalar results to tabular format
-  const transformScalarToTable = (scalarResults: Array<{key: string, value: any}>): GraphRecord[] => {
+  // Improved scalar results transformation with dynamic column detection
+  const transformScalarToTable = (scalarResults: Array<{key: string, value: any}>): { records: GraphRecord[], columns: string[] } => {
     const records: GraphRecord[] = [];
+    const columnSet = new Set<string>();
     
-    // Group scalar results by row (assuming they come in groups of 3: c.name, p.name, p.title)
-    // But we need to handle the case where they might not be in perfect groups
-    const rowSize = 3; // Based on the query: c.name, p.name, p.title
-    for (let i = 0; i < scalarResults.length; i += rowSize) {
-      const row = scalarResults.slice(i, i + rowSize);
+    // First, collect all unique columns
+    scalarResults.forEach(item => {
+      columnSet.add(item.key);
+    });
+    
+    const columns = Array.from(columnSet);
+    
+    // Group scalar results by row - use a more sophisticated approach
+    // Look for patterns that indicate row boundaries
+    const rows: Array<{key: string, value: any}[]> = [];
+    let currentRow: Array<{key: string, value: any}> = [];
+    
+    // Track which columns we've seen in the current row
+    const seenInCurrentRow = new Set<string>();
+    
+    for (let i = 0; i < scalarResults.length; i++) {
+      const item = scalarResults[i];
+      const key = item.key;
+      
+      // If we've already seen this key in the current row, start a new row
+      if (seenInCurrentRow.has(key)) {
+        if (currentRow.length > 0) {
+          rows.push([...currentRow]);
+          currentRow = [];
+          seenInCurrentRow.clear();
+        }
+      }
+      
+      currentRow.push(item);
+      seenInCurrentRow.add(key);
+      
+      // If we've collected all columns, start a new row
+      if (currentRow.length === columns.length) {
+        rows.push([...currentRow]);
+        currentRow = [];
+        seenInCurrentRow.clear();
+      }
+    }
+    
+    // Add the last row if it has content
+    if (currentRow.length > 0) {
+      rows.push(currentRow);
+    }
+    
+    // Convert rows to records
+    rows.forEach((row, rowIndex) => {
       const record: GraphRecord = {
-        id: `scalar-${Math.floor(i / rowSize)}`,
+        id: `scalar-${rowIndex}`,
         type: 'node' as const,
-        label: `Row ${Math.floor(i / rowSize) + 1}`,
+        label: `Row ${rowIndex + 1}`,
         properties: {},
         source: undefined,
         target: undefined,
@@ -108,14 +150,31 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
       });
       
       records.push(record);
-    }
+    });
     
-    return records;
+    return { records, columns };
   };
 
-  // Determine which data to display
+  // Determine which data to display and get dynamic columns
   const isGraphData = queryResult && (queryResult.nodes?.length > 0 || queryResult.edges?.length > 0);
   const isScalarData = queryResult && queryResult.scalarResults && queryResult.scalarResults.length > 0;
+  
+  const { displayData, dynamicColumns } = useMemo(() => {
+    let data: any[] = [];
+    let columns: string[] = [];
+    
+    if (isGraphData) {
+      data = transformGraphToTable(queryResult!.nodes || [], queryResult!.edges || []);
+    } else if (isScalarData) {
+      const result = transformScalarToTable(queryResult!.scalarResults || []);
+      data = result.records;
+      columns = result.columns;
+    } else {
+      data = data || [];
+    }
+    
+    return { displayData: data, dynamicColumns: columns };
+  }, [queryResult, isGraphData, isScalarData]);
   
   // Debug logging
   console.log('DataTable Debug:', {
@@ -124,21 +183,8 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
     isScalarData,
     nodesLength: queryResult?.nodes?.length || 0,
     edgesLength: queryResult?.edges?.length || 0,
-    scalarResultsLength: queryResult?.scalarResults?.length || 0
-  });
-  
-  let displayData: any[] = [];
-  if (isGraphData) {
-    displayData = transformGraphToTable(queryResult.nodes || [], queryResult.edges || []);
-  } else if (isScalarData) {
-    displayData = transformScalarToTable(queryResult.scalarResults || []);
-  } else {
-    displayData = data || [];
-  }
-  
-  console.log('DataTable Display Data:', {
-    displayDataLength: displayData.length,
-    displayData: displayData.slice(0, 2) // Show first 2 items for debugging
+    scalarResultsLength: queryResult?.scalarResults?.length || 0,
+    dynamicColumns
   });
 
 
@@ -208,6 +254,92 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
       setSortField(field);
       setSortDirection("asc");
     }
+  };
+
+  // Render dynamic columns for scalar data
+  const renderScalarColumns = () => {
+    if (!isScalarData || dynamicColumns.length === 0) {
+      return (
+        <>
+          <th className="text-left p-3 font-medium text-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSort("label")}
+              className="h-auto p-0 font-medium hover:bg-transparent"
+              data-testid="sort-row"
+            >
+              Row
+              <ArrowUpDown className="w-3 h-3 ml-1" />
+            </Button>
+          </th>
+          <th className="text-left p-3 font-medium text-sm">Data</th>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <th className="text-left p-3 font-medium text-sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleSort("label")}
+            className="h-auto p-0 font-medium hover:bg-transparent"
+            data-testid="sort-row"
+          >
+            Row
+            <ArrowUpDown className="w-3 h-3 ml-1" />
+          </Button>
+        </th>
+        {dynamicColumns.map((column) => (
+          <th key={column} className="text-left p-3 font-medium text-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSort(column)}
+              className="h-auto p-0 font-medium hover:bg-transparent"
+              data-testid={`sort-${column}`}
+            >
+              {column}
+              <ArrowUpDown className="w-3 h-3 ml-1" />
+            </Button>
+          </th>
+        ))}
+      </>
+    );
+  };
+
+  // Render dynamic cells for scalar data
+  const renderScalarCells = (record: GraphRecord) => {
+    if (!isScalarData || dynamicColumns.length === 0) {
+      return (
+        <>
+          <td className="p-3 font-medium">{record.label}</td>
+          <td className="p-3 text-sm">
+            <div className="space-y-1">
+              {Object.entries(record.properties).map(([key, value]) => (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="font-medium text-xs text-muted-foreground min-w-0 flex-shrink-0">{key}:</span>
+                  <span className="text-sm">{String(value)}</span>
+                </div>
+              ))}
+            </div>
+          </td>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <td className="p-3 font-medium">{record.label}</td>
+        {dynamicColumns.map((column) => (
+          <td key={column} className="p-3 text-sm">
+            {record.properties[column] !== undefined ? String(record.properties[column]) : "—"}
+          </td>
+        ))}
+      </>
+    );
   };
 
   return (
@@ -296,21 +428,7 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
                     <th className="text-left p-3 font-medium text-sm">Relationship</th>
                   </>
                 ) : isScalarData ? (
-                  <>
-                    <th className="text-left p-3 font-medium text-sm">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSort("label")}
-                        className="h-auto p-0 font-medium hover:bg-transparent"
-                        data-testid="sort-row"
-                      >
-                        Row
-                        <ArrowUpDown className="w-3 h-3 ml-1" />
-                      </Button>
-                    </th>
-                    <th className="text-left p-3 font-medium text-sm">Data</th>
-                  </>
+                  renderScalarColumns()
                 ) : (
                   <>
                     <th className="text-left p-3 font-medium text-sm">
@@ -407,17 +525,7 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
                       }}
                       data-testid={`row-record-${graphRecord.id}`}
                     >
-                      <td className="p-3 font-medium">{graphRecord.label}</td>
-                      <td className="p-3 text-sm">
-                        <div className="space-y-1">
-                          {Object.entries(graphRecord.properties).map(([key, value]) => (
-                            <div key={key} className="flex items-center gap-2">
-                              <span className="font-medium text-xs text-muted-foreground min-w-0 flex-shrink-0">{key}:</span>
-                              <span className="text-sm">{String(value)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </td>
+                      {renderScalarCells(graphRecord)}
                     </tr>
                   );
                 } else {
