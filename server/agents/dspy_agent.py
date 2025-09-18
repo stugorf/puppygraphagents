@@ -21,10 +21,11 @@ class FinancialKnowledgeGraph(dspy.Signature):
     Use MATCH, RETURN, WHERE, ORDER BY, LIMIT clauses. Return both nodes and relationships when needed.
     
     IMPORTANT QUERY GUIDELINES:
-    1. CRITICAL: Always return specific properties explicitly instead of whole node objects.
-       For example, use "RETURN c.name, c.sector, c.industry" instead of "RETURN c".
-       This ensures properties are properly returned in the results and work with Graph/Data views.
-       NEVER use "RETURN c" or "RETURN n" as this returns empty properties.
+    1. CRITICAL: Always return BOTH the node object AND specific properties for Graph View compatibility.
+       For example, use "RETURN DISTINCT c, c.name, c.sector, c.industry" instead of just "RETURN c" or just "RETURN c.name, c.sector".
+       This ensures both graph nodes are available for Graph View AND properties are available for Data View.
+       The node object (c) enables graph visualization, while individual properties enable detailed data display.
+       Always use DISTINCT to prevent duplicate results.
     
     2. Use case-insensitive matching for text fields to handle data inconsistencies:
        - Use toLower() function for case-insensitive comparisons: WHERE LOWER(c.sector) = LOWER('financial services')
@@ -64,10 +65,11 @@ class TemporalFinancialQuery(dspy.Signature):
     Use proper date/time filtering with WHERE clauses and temporal properties.
     
     IMPORTANT QUERY GUIDELINES:
-    1. CRITICAL: Always return specific properties explicitly instead of whole node objects.
-       For example, use "RETURN c.name, c.sector, c.industry" instead of "RETURN c".
-       This ensures properties are properly returned in the results and work with Graph/Data views.
-       NEVER use "RETURN c" or "RETURN n" as this returns empty properties.
+    1. CRITICAL: Always return BOTH the node object AND specific properties for Graph View compatibility.
+       For example, use "RETURN DISTINCT c, c.name, c.sector, c.industry" instead of just "RETURN c" or just "RETURN c.name, c.sector".
+       This ensures both graph nodes are available for Graph View AND properties are available for Data View.
+       The node object (c) enables graph visualization, while individual properties enable detailed data display.
+       Always use DISTINCT to prevent duplicate results.
     
     2. Use case-insensitive matching for text fields to handle data inconsistencies:
        - Use toLower() function for case-insensitive comparisons: WHERE LOWER(c.sector) = LOWER('financial services')

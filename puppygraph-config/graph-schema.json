@@ -6,7 +6,7 @@
       "jdbc": {
         "username": "postgres",
         "password": "postgres123",
-        "jdbcUri": "jdbc:postgresql://postgres:5432/temporal_graph",
+        "jdbcUri": "jdbc:postgresql://temporal_graph_postgres_dev:5432/temporal_graph",
         "driverClass": "org.postgresql.Driver"
       }
     }

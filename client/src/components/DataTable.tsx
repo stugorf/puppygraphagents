@@ -159,17 +159,36 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
   const isGraphData = queryResult && (queryResult.nodes?.length > 0 || queryResult.edges?.length > 0);
   const isScalarData = queryResult && queryResult.scalarResults && queryResult.scalarResults.length > 0;
   
+  console.log('🔍 Data type detection:', {
+    hasQueryResult: !!queryResult,
+    nodesLength: queryResult?.nodes?.length || 0,
+    edgesLength: queryResult?.edges?.length || 0,
+    scalarResultsLength: queryResult?.scalarResults?.length || 0,
+    isGraphData,
+    isScalarData,
+    scalarResults: queryResult?.scalarResults
+  });
+  
   const { displayData, dynamicColumns } = useMemo(() => {
     let data: any[] = [];
     let columns: string[] = [];
     
-    if (isGraphData) {
-      data = transformGraphToTable(queryResult!.nodes || [], queryResult!.edges || []);
-    } else if (isScalarData) {
+    console.log('🔍 useMemo logic:', { isScalarData, isGraphData });
+    
+    // If we have both graph data and scalar data, prefer scalar data for individual columns
+    if (isScalarData) {
+      console.log('🔍 Using scalar data path');
       const result = transformScalarToTable(queryResult!.scalarResults || []);
       data = result.records;
       columns = result.columns;
+      console.log('🔍 Scalar transformation result:', { recordsLength: data.length, columns, columnsLength: columns.length });
+      console.log('🔍 First record:', data[0]);
+      console.log('🔍 All columns:', columns);
+    } else if (isGraphData) {
+      console.log('🔍 Using graph data path');
+      data = transformGraphToTable(queryResult!.nodes || [], queryResult!.edges || []);
     } else {
+      console.log('🔍 Using fallback path');
       data = data || [];
     }
     
@@ -177,15 +196,24 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
   }, [queryResult, isGraphData, isScalarData]);
   
   // Debug logging
-  console.log('DataTable Debug:', {
+  console.log('🔍 DataTable Debug - UPDATED VERSION:', {
     queryResult,
     isGraphData,
     isScalarData,
     nodesLength: queryResult?.nodes?.length || 0,
     edgesLength: queryResult?.edges?.length || 0,
     scalarResultsLength: queryResult?.scalarResults?.length || 0,
-    dynamicColumns
+    dynamicColumns,
+    displayDataLength: displayData.length,
+    firstRecord: displayData[0],
+    scalarResults: queryResult?.scalarResults?.slice(0, 5),
+    displayData: displayData.slice(0, 3) // Show first 3 records
   });
+  
+  // Force a visual indicator that this version is loaded
+  if (typeof window !== 'undefined') {
+    console.log('🚀 DataTable component loaded with UPDATED VERSION - individual columns should work!');
+  }
 
 
   const filteredData = displayData
@@ -312,7 +340,16 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
 
   // Render dynamic cells for scalar data
   const renderScalarCells = (record: GraphRecord) => {
+    console.log('🔍 renderScalarCells called:', { 
+      isScalarData, 
+      dynamicColumnsLength: dynamicColumns.length, 
+      dynamicColumns,
+      recordProperties: Object.keys(record.properties),
+      record 
+    });
+    
     if (!isScalarData || dynamicColumns.length === 0) {
+      console.log('🔍 Using fallback rendering (concatenated) - isScalarData:', isScalarData, 'dynamicColumns.length:', dynamicColumns.length);
       return (
         <>
           <td className="p-3 font-medium">{record.label}</td>
@@ -330,6 +367,7 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
       );
     }
 
+    console.log('🔍 Using individual column rendering');
     return (
       <>
         <td className="p-3 font-medium">{record.label}</td>
@@ -348,7 +386,7 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
         <CardTitle className="flex items-center justify-between">
           <span>
             {isGraphData ? "Graph Query Results" : 
-             isScalarData ? "Scalar Query Results" : 
+             isScalarData ? "Scalar Query Results (UPDATED)" : 
              "Financial Records"}
           </span>
           <div className="flex gap-2">
@@ -476,7 +514,22 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
             </thead>
             <tbody>
               {filteredData.map((record) => {
-                if (isGraphData) {
+                if (isScalarData) {
+                  const graphRecord = record as GraphRecord;
+                  return (
+                    <tr
+                      key={graphRecord.id}
+                      className="border-b border-border hover:bg-muted/30 cursor-pointer transition-colors"
+                      onClick={() => {
+                        console.log('Scalar record clicked:', graphRecord);
+                        onRowClick?.(graphRecord);
+                      }}
+                      data-testid={`row-record-${graphRecord.id}`}
+                    >
+                      {renderScalarCells(graphRecord)}
+                    </tr>
+                  );
+                } else if (isGraphData) {
                   const graphRecord = record as GraphRecord;
                   return (
                     <tr
@@ -511,21 +564,6 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
                       <td className="p-3 text-sm font-mono">{graphRecord.source || "—"}</td>
                       <td className="p-3 text-sm font-mono">{graphRecord.target || "—"}</td>
                       <td className="p-3 text-sm">{graphRecord.relationship || "—"}</td>
-                    </tr>
-                  );
-                } else if (isScalarData) {
-                  const graphRecord = record as GraphRecord;
-                  return (
-                    <tr
-                      key={graphRecord.id}
-                      className="border-b border-border hover:bg-muted/30 cursor-pointer transition-colors"
-                      onClick={() => {
-                        console.log('Scalar record clicked:', graphRecord);
-                        onRowClick?.(graphRecord);
-                      }}
-                      data-testid={`row-record-${graphRecord.id}`}
-                    >
-                      {renderScalarCells(graphRecord)}
                     </tr>
                   );
                 } else {

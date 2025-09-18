@@ -94,6 +94,9 @@ export class DataTransformer {
     const edges: any[] = [];
     const scalarResults: any[] = [];
     
+    // Group scalar results by node variable (e.g., c.name -> c)
+    const scalarGroups: Record<string, Record<string, any>> = {};
+    
     records.forEach(record => {
       if (record.type === 'node') {
         nodes.push({
@@ -116,6 +119,52 @@ export class DataTransformer {
           key: record.label,
           value: Object.values(record.properties)[0]
         });
+        
+        // Group scalars by node variable for merging
+        const match = record.label.match(/^([a-zA-Z]+)\.(.+)$/);
+        if (match) {
+          const [, nodeVar, property] = match;
+          if (!scalarGroups[nodeVar]) {
+            scalarGroups[nodeVar] = {};
+          }
+          scalarGroups[nodeVar][property] = Object.values(record.properties)[0];
+        }
+      }
+    });
+    
+    // Merge scalar properties with node properties
+    // Group scalars by row (they come in groups of 3: sector, industry, name)
+    const scalarRows: Record<string, any>[] = [];
+    const propertiesPerRow = 3; // sector, industry, name
+    const totalScalars = scalarResults.length;
+    const numRows = totalScalars / propertiesPerRow;
+    
+    for (let i = 0; i < numRows; i++) {
+      const row: Record<string, any> = {};
+      for (let j = 0; j < propertiesPerRow; j++) {
+        const scalarIndex = i * propertiesPerRow + j;
+        if (scalarIndex < scalarResults.length) {
+          const scalar = scalarResults[scalarIndex];
+          const match = scalar.key.match(/^([a-zA-Z]+)\.(.+)$/);
+          if (match) {
+            const [, , property] = match;
+            row[property] = scalar.value;
+          }
+        }
+      }
+      scalarRows.push(row);
+    }
+    
+    // Assign scalar properties to nodes
+    nodes.forEach((node, index) => {
+      if (index < scalarRows.length) {
+        const scalarRow = scalarRows[index];
+        node.properties = { ...node.properties, ...scalarRow };
+        
+        // Update the label to use the name if available
+        if (scalarRow.name) {
+          node.label = scalarRow.name;
+        }
       }
     });
     

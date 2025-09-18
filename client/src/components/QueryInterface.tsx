@@ -66,18 +66,41 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
       'Rating': 'rating'
     };
 
+    // Group scalar results by node (assuming they follow a pattern like c.name, c.ticker, etc.)
+    const scalarGroups: Record<string, Record<string, any>> = {};
+    if (scalarResults) {
+      scalarResults.forEach(scalar => {
+        const match = scalar.key.match(/^([a-zA-Z]+)\.(.+)$/);
+        if (match) {
+          const [, nodeVar, property] = match;
+          if (!scalarGroups[nodeVar]) {
+            scalarGroups[nodeVar] = {};
+          }
+          scalarGroups[nodeVar][property] = scalar.value;
+        }
+      });
+    }
+
     // Add positioning for graph layout (simple grid layout)
     const nodes: GraphNode[] = backendNodes.map((node, index) => {
       const angle = (index * 2 * Math.PI) / backendNodes.length;
       const radius = Math.min(150 + backendNodes.length * 10, 250);
       
+      // Merge node properties with scalar results
+      const mergedProperties = { ...node.properties };
+      
+      // Try to find matching scalar data for this node
+      // This is a heuristic - we'll use the first available scalar group
+      const scalarGroup = Object.values(scalarGroups)[0] || {};
+      Object.assign(mergedProperties, scalarGroup);
+      
       return {
         id: node.id,
-        label: node.properties?.name || node.properties?.title || node.label || `${node.label} ${index + 1}`,
+        label: mergedProperties?.name || mergedProperties?.title || node.label || `${node.label} ${index + 1}`,
         type: nodeTypeMapping[node.label] || 'company',
         x: 250 + radius * Math.cos(angle),
         y: 200 + radius * Math.sin(angle),
-        properties: node.properties
+        properties: mergedProperties
       };
     });
 
