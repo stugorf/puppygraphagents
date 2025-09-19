@@ -326,8 +326,8 @@ export function GraphVisualization({
     const svgRect = svgRef.current?.getBoundingClientRect();
     if (!svgRect) return;
     
-    const svgX = ((e.clientX - svgRect.left) / zoom) - pan.x;
-    const svgY = ((e.clientY - svgRect.top) / zoom) - pan.y;
+    const svgX = (e.clientX - svgRect.left) * (1000 / zoom) / svgRect.width + pan.x;
+    const svgY = (e.clientY - svgRect.top) * (600 / zoom) / svgRect.height + pan.y;
     
     console.log('Starting drag for node:', node.id);
     
@@ -389,8 +389,8 @@ export function GraphVisualization({
         }
         
         // Convert screen coordinates directly to SVG coordinates
-        const svgX = (e.clientX - svgRect.left) / zoom - pan.x;
-        const svgY = (e.clientY - svgRect.top) / zoom - pan.y;
+        const svgX = (e.clientX - svgRect.left) * (1000 / zoom) / svgRect.width + pan.x;
+        const svgY = (e.clientY - svgRect.top) * (600 / zoom) / svgRect.height + pan.y;
         
         // Calculate delta from the initial mouse position
         const deltaX = svgX - (nodeDragStart.svgX || 0);
@@ -609,7 +609,7 @@ export function GraphVisualization({
             ref={svgRef}
             width="100%" 
             height="100%" 
-            viewBox="0 0 1000 600"
+            viewBox={`${pan.x} ${pan.y} ${1000 / zoom} ${600 / zoom}`}
             className="select-none"
             data-testid="graph-canvas"
             onWheel={handleWheel}
@@ -785,7 +785,7 @@ export function GraphVisualization({
                 ref={svgRef}
                 width="100%" 
                 height="100%" 
-                viewBox="0 0 1000 600"
+                viewBox={`${pan.x} ${pan.y} ${1000 / zoom} ${600 / zoom}`}
                 className="select-none"
                 onWheel={handleWheel}
               >
