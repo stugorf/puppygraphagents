@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { pool } from "./db";
 import { puppyGraphClient } from "./graph/puppygraph_client";
 import { simplifiedPuppyGraphClient } from "./graph/simplified_puppygraph_client";
 import { DataTransformer } from "./graph/data_transformer";
@@ -554,6 +555,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         status: "error", 
         error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // SQL Query Execution for Data Browser
+  app.post("/api/sql/query", async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "SQL query is required and must be a string" });
+      }
+
+      // Basic SQL injection protection - only allow SELECT statements
+      const trimmedQuery = query.trim().toLowerCase();
+      if (!trimmedQuery.startsWith('select')) {
+        return res.status(400).json({ 
+          error: "Only SELECT queries are allowed for security reasons" 
+        });
+      }
+
+      console.log(`Executing SQL query: ${query}`);
+      const startTime = Date.now();
+      
+      // Execute the SQL query using the database pool
+      const result = await pool.query(query);
+      const executionTime = Date.now() - startTime;
+
+      res.json({
+        success: true,
+        data: result.rows,
+        columns: result.fields?.map(field => ({
+          name: field.name,
+          dataType: field.dataTypeID
+        })) || [],
+        rowCount: result.rowCount,
+        executionTime
+      });
+
+    } catch (error) {
+      console.error("Error executing SQL query:", error);
+      res.status(500).json({ 
+        error: "Failed to execute SQL query",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get database schema information for Data Browser
+  app.get("/api/sql/schema", async (req, res) => {
+    try {
+      // Get table information
+      const tablesQuery = `
+        SELECT 
+          table_name,
+          table_type
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        ORDER BY table_name
+      `;
+      
+      // Get column information
+      const columnsQuery = `
+        SELECT 
+          table_name,
+          column_name,
+          data_type,
+          is_nullable,
+          column_default
+        FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        ORDER BY table_name, ordinal_position
+      `;
+
+      const [tablesResult, columnsResult] = await Promise.all([
+        pool.query(tablesQuery),
+        pool.query(columnsQuery)
+      ]);
+
+      // Group columns by table
+      const schema = tablesResult.rows.map(table => ({
+        name: table.table_name,
+        type: table.table_type,
+        columns: columnsResult.rows
+          .filter(col => col.table_name === table.table_name)
+          .map(col => ({
+            name: col.column_name,
+            type: col.data_type,
+            nullable: col.is_nullable === 'YES',
+            default: col.column_default
+          }))
+      }));
+
+      res.json({
+        success: true,
+        schema
+      });
+
+    } catch (error) {
+      console.error("Error fetching database schema:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch database schema",
+        details: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
