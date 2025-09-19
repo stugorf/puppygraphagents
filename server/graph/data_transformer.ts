@@ -88,23 +88,34 @@ export class DataTransformer {
 
   /**
    * Transform unified records to legacy format for backward compatibility
+   * Properly handles PuppyGraph's response format with dynamic property detection
    */
   static toLegacyFormat(records: UnifiedGraphRecord[]): { nodes: any[], edges: any[], scalarResults: any[] } {
     const nodes: any[] = [];
     const edges: any[] = [];
     const scalarResults: any[] = [];
     
-    // Group scalar results by node variable (e.g., c.name -> c)
+    // Group scalars by their node variable (e.g., c.name -> c)
     const scalarGroups: Record<string, Record<string, any>> = {};
     
     records.forEach(record => {
       if (record.type === 'node') {
-        nodes.push({
+        // For nodes, use their actual properties from PuppyGraph
+        const nodeData = {
           id: record.id,
           label: record.label,
           properties: record.properties,
           labels: record.labels
-        });
+        };
+        
+        // Try to extract a better label from properties
+        if (record.properties?.name) {
+          nodeData.label = record.properties.name;
+        } else if (record.properties?.title) {
+          nodeData.label = record.properties.title;
+        }
+        
+        nodes.push(nodeData);
       } else if (record.type === 'edge') {
         edges.push({
           id: record.id,
@@ -114,13 +125,13 @@ export class DataTransformer {
           properties: record.properties
         });
       } else if (record.type === 'scalar') {
-        // Handle scalar results
+        // Handle scalar results - group by node variable
         scalarResults.push({
           key: record.label,
           value: Object.values(record.properties)[0]
         });
         
-        // Group scalars by node variable for merging
+        // Extract node variable and property from scalar key (e.g., "c.name" -> nodeVar="c", property="name")
         const match = record.label.match(/^([a-zA-Z]+)\.(.+)$/);
         if (match) {
           const [, nodeVar, property] = match;
@@ -132,41 +143,25 @@ export class DataTransformer {
       }
     });
     
-    // Merge scalar properties with node properties
-    // Group scalars by row (they come in groups of 3: sector, industry, name)
-    const scalarRows: Record<string, any>[] = [];
-    const propertiesPerRow = 3; // sector, industry, name
-    const totalScalars = scalarResults.length;
-    const numRows = totalScalars / propertiesPerRow;
-    
-    for (let i = 0; i < numRows; i++) {
-      const row: Record<string, any> = {};
-      for (let j = 0; j < propertiesPerRow; j++) {
-        const scalarIndex = i * propertiesPerRow + j;
-        if (scalarIndex < scalarResults.length) {
-          const scalar = scalarResults[scalarIndex];
-          const match = scalar.key.match(/^([a-zA-Z]+)\.(.+)$/);
-          if (match) {
-            const [, , property] = match;
-            row[property] = scalar.value;
+    // If we have scalar groups, merge them with nodes that don't have properties
+    // This handles cases where PuppyGraph returns nodes without properties but with scalar values
+    if (Object.keys(scalarGroups).length > 0) {
+      nodes.forEach(node => {
+        // If node has no properties but we have scalar data, merge it
+        if (!node.properties || Object.keys(node.properties).length === 0) {
+          // Find the first scalar group that might match this node
+          const scalarGroup = Object.values(scalarGroups)[0];
+          if (scalarGroup) {
+            node.properties = { ...node.properties, ...scalarGroup };
+            
+            // Update label if we have a name property
+            if (scalarGroup.name) {
+              node.label = scalarGroup.name;
+            }
           }
         }
-      }
-      scalarRows.push(row);
+      });
     }
-    
-    // Assign scalar properties to nodes
-    nodes.forEach((node, index) => {
-      if (index < scalarRows.length) {
-        const scalarRow = scalarRows[index];
-        node.properties = { ...node.properties, ...scalarRow };
-        
-        // Update the label to use the name if available
-        if (scalarRow.name) {
-          node.label = scalarRow.name;
-        }
-      }
-    });
     
     return { nodes, edges, scalarResults };
   }

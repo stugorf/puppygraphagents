@@ -85,6 +85,8 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
 
   // Improved scalar results transformation with dynamic column detection
   const transformScalarToTable = (scalarResults: Array<{key: string, value: any}>): { records: GraphRecord[], columns: string[] } => {
+    console.log('🔍 transformScalarToTable called with:', scalarResults.slice(0, 5));
+    
     const records: GraphRecord[] = [];
     const columnSet = new Set<string>();
     
@@ -94,6 +96,7 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
     });
     
     const columns = Array.from(columnSet);
+    console.log('🔍 Unique columns found:', columns);
     
     // Group scalar results by row - use a more sophisticated approach
     // Look for patterns that indicate row boundaries
@@ -132,6 +135,8 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
       rows.push(currentRow);
     }
     
+    console.log('🔍 Rows created:', rows.length, 'rows');
+    
     // Convert rows to records
     rows.forEach((row, rowIndex) => {
       const record: GraphRecord = {
@@ -152,6 +157,7 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
       records.push(record);
     });
     
+    console.log('🔍 Final records:', records.length, 'records with columns:', columns);
     return { records, columns };
   };
 
@@ -286,7 +292,10 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
 
   // Render dynamic columns for scalar data
   const renderScalarColumns = () => {
+    console.log('🔍 renderScalarColumns called:', { isScalarData, dynamicColumnsLength: dynamicColumns.length, dynamicColumns });
+    
     if (!isScalarData || dynamicColumns.length === 0) {
+      console.log('🔍 Using fallback column headers');
       return (
         <>
           <th className="text-left p-3 font-medium text-sm">
@@ -306,6 +315,7 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
       );
     }
 
+    console.log('🔍 Using individual column headers:', dynamicColumns);
     return (
       <>
         <th className="text-left p-3 font-medium text-sm">
@@ -445,7 +455,9 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                {isGraphData ? (
+                {isScalarData ? (
+                  renderScalarColumns()
+                ) : isGraphData ? (
                   <>
                     <th className="text-left p-3 font-medium text-sm">
                       <Button
@@ -465,8 +477,6 @@ export function DataTable({ data = [], nodes, queryResult, onRowClick }: DataTab
                     <th className="text-left p-3 font-medium text-sm">Target</th>
                     <th className="text-left p-3 font-medium text-sm">Relationship</th>
                   </>
-                ) : isScalarData ? (
-                  renderScalarColumns()
                 ) : (
                   <>
                     <th className="text-left p-3 font-medium text-sm">

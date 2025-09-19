@@ -110,20 +110,26 @@ export function Dashboard() {
 
   const handleQueryResult = (result: QueryResult) => {
     console.log('Received query result:', result);
+    console.log('🔍 First 3 node labels:', result.nodes?.slice(0, 3).map(n => n.label));
     setQueryResult(result);
     
     // Determine which view to show based on result type
     const hasGraphData = result.nodes && result.nodes.length > 0;
     const hasScalarData = result.scalarResults && result.scalarResults.length > 0;
     
-    if (hasGraphData) {
-      // Show graph view for node/edge results
-      setSelectedTab("graph");
-    } else if (hasScalarData) {
-      // Show data view for scalar-only results
+    console.log('🔍 Tab selection logic:', { hasGraphData, hasScalarData, nodesLength: result.nodes?.length, scalarLength: result.scalarResults?.length });
+    
+    if (hasScalarData) {
+      // Show data view for scalar results (individual columns)
+      console.log('🔍 Selecting DATA tab for scalar results');
       setSelectedTab("data");
+    } else if (hasGraphData) {
+      // Show graph view for node/edge results
+      console.log('🔍 Selecting GRAPH tab for graph data');
+      setSelectedTab("graph");
     } else {
       // Default to data view if no specific data type
+      console.log('🔍 Selecting DATA tab as default');
       setSelectedTab("data");
     }
   };
@@ -205,7 +211,50 @@ export function Dashboard() {
                 <TabsContent value="graph" className="h-[calc(100%-3rem)] mt-4">
                   {queryResult?.nodes && queryResult.nodes.length > 0 ? (
                     <GraphVisualization 
-                      nodes={queryResult.nodes} 
+                      nodes={queryResult.nodes.map((node, index) => {
+                        // Debug the raw node data first
+                        console.log('🔍 Raw node data:', { 
+                          index,
+                          node,
+                          hasProperties: !!node.properties,
+                          propertiesKeys: node.properties ? Object.keys(node.properties) : [],
+                          scalarResults: queryResult.scalarResults?.slice(0, 3)
+                        });
+                        
+                        // For query results, we need to merge scalar results with nodes
+                        // Find corresponding scalar data for this node
+                        const nodeIndex = index;
+                        const scalarData = queryResult.scalarResults?.slice(nodeIndex * 3, (nodeIndex + 1) * 3) || [];
+                        
+                        // Extract name from scalar data
+                        const nameFromScalar = scalarData.find(s => s.key?.includes('name'))?.value;
+                        const sectorFromScalar = scalarData.find(s => s.key?.includes('sector'))?.value;
+                        const industryFromScalar = scalarData.find(s => s.key?.includes('industry'))?.value;
+                        
+                        const transformedNode = {
+                          ...node,
+                          label: nameFromScalar || node.properties?.name || node.properties?.title || node.label || `Node ${index + 1}`,
+                          type: 'company', // All query results are companies
+                          properties: {
+                            ...node.properties,
+                            name: nameFromScalar || node.properties?.name,
+                            sector: sectorFromScalar || node.properties?.sector,
+                            industry: industryFromScalar || node.properties?.industry
+                          }
+                        };
+                        
+                        console.log('🔍 Graph node transformation:', { 
+                          index,
+                          original: node.label, 
+                          transformed: transformedNode.label, 
+                          type: transformedNode.type,
+                          nameFromScalar,
+                          sectorFromScalar,
+                          industryFromScalar,
+                          finalProperties: transformedNode.properties
+                        });
+                        return transformedNode;
+                      })} 
                       edges={queryResult.edges}
                       onNodeClick={handleNodeClick}
                       isExpanded={isGraphExpanded}

@@ -57,69 +57,6 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
   const [showCypherDialog, setShowCypherDialog] = useState(false);
   const { toast } = useToast();
 
-  // Transform backend data to frontend format
-  const transformGraphData = (backendNodes: any[], backendEdges: any[], scalarResults?: Array<{key: string, value: any}>): QueryResult => {
-    const nodeTypeMapping: Record<string, 'company' | 'person' | 'transaction' | 'rating'> = {
-      'Company': 'company',
-      'Person': 'person', 
-      'Transaction': 'transaction',
-      'Rating': 'rating'
-    };
-
-    // Group scalar results by node (assuming they follow a pattern like c.name, c.ticker, etc.)
-    const scalarGroups: Record<string, Record<string, any>> = {};
-    if (scalarResults) {
-      scalarResults.forEach(scalar => {
-        const match = scalar.key.match(/^([a-zA-Z]+)\.(.+)$/);
-        if (match) {
-          const [, nodeVar, property] = match;
-          if (!scalarGroups[nodeVar]) {
-            scalarGroups[nodeVar] = {};
-          }
-          scalarGroups[nodeVar][property] = scalar.value;
-        }
-      });
-    }
-
-    // Add positioning for graph layout (simple grid layout)
-    const nodes: GraphNode[] = backendNodes.map((node, index) => {
-      const angle = (index * 2 * Math.PI) / backendNodes.length;
-      const radius = Math.min(150 + backendNodes.length * 10, 250);
-      
-      // Merge node properties with scalar results
-      const mergedProperties = { ...node.properties };
-      
-      // Try to find matching scalar data for this node
-      // This is a heuristic - we'll use the first available scalar group
-      const scalarGroup = Object.values(scalarGroups)[0] || {};
-      Object.assign(mergedProperties, scalarGroup);
-      
-      return {
-        id: node.id,
-        label: mergedProperties?.name || mergedProperties?.title || node.label || `${node.label} ${index + 1}`,
-        type: nodeTypeMapping[node.label] || 'company',
-        x: 250 + radius * Math.cos(angle),
-        y: 200 + radius * Math.sin(angle),
-        properties: mergedProperties
-      };
-    });
-
-    // Transform edges to use source/target instead of fromId/toId
-    const edges: GraphEdge[] = backendEdges.map(edge => ({
-      id: edge.id,
-      source: edge.fromId || edge.from_id,
-      target: edge.toId || edge.to_id,
-      label: edge.label,
-      type: edge.label,
-      timestamp: edge.properties?.start_date || edge.properties?.valid_from
-    }));
-
-    return { 
-      nodes, 
-      edges, 
-      scalarResults: scalarResults || []
-    };
-  };
 
   const handleExecute = async () => {
     setIsLoading(true);
@@ -177,8 +114,12 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
           scalarResults: data.scalarResults || []
         };
       } else {
-        // Natural language endpoint returns legacy format
-        result = transformGraphData(data.nodes || [], data.edges || [], data.scalarResults || []);
+        // Natural language endpoint also returns pre-formatted data from backend
+        result = {
+          nodes: data.nodes || [],
+          edges: data.edges || [],
+          scalarResults: data.scalarResults || []
+        };
       }
       
       // Add metadata
@@ -221,7 +162,7 @@ export function QueryInterface({ onExecuteQuery, onQueryResult, temporalParams }
 
   const exampleQueries = {
     natural: [
-      "Show me companies in the financial services sector with their executives",
+      "Show me companies in the financial services sector.",
       "Find financial services companies, their CEOs, and any credit ratings they have received",
       "What companies have employees and what are their credit ratings?"
     ],

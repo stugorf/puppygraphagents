@@ -14,9 +14,9 @@ default:
     @echo "Available commands:"
     @just --list
 
-# Start the application (all services in Docker)
+# Start the application in production mode (all services in Docker)
 start:
-    @echo "🚀 Starting Temporal Knowledge Graph application..."
+    @echo "🚀 Starting Temporal Knowledge Graph application (PRODUCTION)..."
     @echo "📦 Starting all Docker services..."
     docker-compose up -d
     @echo "⏳ Waiting for services to be ready..."
@@ -27,22 +27,57 @@ start:
     @echo "📊 Run 'just status' to check if running"
     @echo "📋 Run 'just logs' to view logs"
 
+# Start the application in development mode (with hot reloading)
+start-dev:
+    @echo "🚀 Starting Temporal Knowledge Graph application (DEVELOPMENT)..."
+    @echo "📦 Starting all Docker services with dev configuration..."
+    docker-compose -f docker-compose.dev.yml up -d
+    @echo "⏳ Waiting for services to be ready..."
+    @sleep 15
+    @echo "✅ All services started in Docker containers"
+    @echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"
+    @echo "🏥 Health check: http://localhost:{{ DEV_PORT }}/api/health"
+    @echo "📊 Run 'just status-dev' to check if running"
+    @echo "📋 Run 'just logs-dev' to view logs"
+
 # Stop the application (all Docker services)
 stop:
     @echo "🛑 Stopping all Docker services..."
     -docker-compose down || echo "⚠️  Docker not running or no containers to stop"
     @echo "✅ Application stopped"
 
+# Stop the development application
+stop-dev:
+    @echo "🛑 Stopping all Docker services (dev)..."
+    -docker-compose -f docker-compose.dev.yml down || echo "⚠️  Docker not running or no containers to stop"
+    @echo "✅ Application stopped"
+
 # Restart the application
 restart: stop start
 
+# Restart the development application
+restart-dev: stop-dev start-dev
+
 # Rebuild and restart Docker services (useful for environment variable changes)
 rebuild:
-    @echo "🔄 Rebuilding Docker services with new environment variables..."
+    @echo "🔄 Rebuilding Docker services with new environment variables (PRODUCTION)..."
     @echo "🛑 Stopping current services..."
     docker-compose down
     @echo "🔨 Rebuilding and starting services..."
     docker-compose up --build -d
+    @echo "⏳ Waiting for services to be ready..."
+    @sleep 10
+    @echo "✅ Services rebuilt and restarted"
+    @echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"
+    @echo "🏥 Health check: http://localhost:{{ DEV_PORT }}/api/health"
+
+# Rebuild and restart development Docker services
+rebuild-dev:
+    @echo "🔄 Rebuilding Docker services with new environment variables (DEVELOPMENT)..."
+    @echo "🛑 Stopping current services..."
+    docker-compose -f docker-compose.dev.yml down
+    @echo "🔨 Rebuilding and starting services..."
+    docker-compose -f docker-compose.dev.yml up --build -d
     @echo "⏳ Waiting for services to be ready..."
     @sleep 10
     @echo "✅ Services rebuilt and restarted"
@@ -93,11 +128,11 @@ migrate:
 # Initialize project for new developers
 init: setup migrate seed
     @echo "🎉 Project initialized successfully!"
-    @echo "Run 'just start' to begin development"
+    @echo "Run 'just start-dev' to begin development"
 
 # Show application status
 status:
-    @echo "📊 Application Status:"
+    @echo "📊 Application Status (PRODUCTION):"
     @if docker-compose ps | grep -q "Up"; then \
         echo "✅ Docker services are running:"; \
         docker-compose ps; \
@@ -106,9 +141,20 @@ status:
         echo "❌ No Docker services are running"; \
     fi
 
+# Show development application status
+status-dev:
+    @echo "📊 Application Status (DEVELOPMENT):"
+    @if docker-compose -f docker-compose.dev.yml ps | grep -q "Up"; then \
+        echo "✅ Docker services are running:"; \
+        docker-compose -f docker-compose.dev.yml ps; \
+        echo "🌐 Frontend: http://localhost:{{ DEV_PORT }}"; \
+    else \
+        echo "❌ No Docker services are running"; \
+    fi
+
 # Show logs from Docker containers
 logs:
-    @echo "📋 Recent Docker container logs:"
+    @echo "📋 Recent Docker container logs (PRODUCTION):"
     @if docker-compose ps | grep -q "Up"; then \
         echo "📄 Last 20 lines from all containers:"; \
         docker-compose logs --tail=20; \
@@ -116,11 +162,30 @@ logs:
         echo "❌ No running Docker containers found"; \
     fi
 
+# Show logs from development Docker containers
+logs-dev:
+    @echo "📋 Recent Docker container logs (DEVELOPMENT):"
+    @if docker-compose -f docker-compose.dev.yml ps | grep -q "Up"; then \
+        echo "📄 Last 20 lines from all containers:"; \
+        docker-compose -f docker-compose.dev.yml logs --tail=20; \
+    else \
+        echo "❌ No running Docker containers found"; \
+    fi
+
 # Follow logs in real-time
 follow-logs:
-    @echo "📋 Following Docker container logs (Ctrl+C to stop):"
+    @echo "📋 Following Docker container logs (Ctrl+C to stop) - PRODUCTION:"
     @if docker-compose ps | grep -q "Up"; then \
         docker-compose logs -f; \
+    else \
+        echo "❌ No running Docker containers found"; \
+    fi
+
+# Follow development logs in real-time
+follow-logs-dev:
+    @echo "📋 Following Docker container logs (Ctrl+C to stop) - DEVELOPMENT:"
+    @if docker-compose -f docker-compose.dev.yml ps | grep -q "Up"; then \
+        docker-compose -f docker-compose.dev.yml logs -f; \
     else \
         echo "❌ No running Docker containers found"; \
     fi
@@ -144,13 +209,27 @@ dev-setup: setup
 
 # Quick health check
 health:
-    @echo "🏥 Health Check:"
+    @echo "🏥 Health Check (PRODUCTION):"
     @if curl -s http://localhost:{{ DEV_PORT }}/api/health > /dev/null 2>&1; then \
         echo "✅ API is responding"; \
     else \
         echo "❌ API is not responding"; \
     fi
     @if docker-compose ps | grep -q "Up"; then \
+        echo "✅ Docker containers are running"; \
+    else \
+        echo "❌ Docker containers are not running"; \
+    fi
+
+# Quick health check for development
+health-dev:
+    @echo "🏥 Health Check (DEVELOPMENT):"
+    @if curl -s http://localhost:{{ DEV_PORT }}/api/health > /dev/null 2>&1; then \
+        echo "✅ API is responding"; \
+    else \
+        echo "❌ API is not responding"; \
+    fi
+    @if docker-compose -f docker-compose.dev.yml ps | grep -q "Up"; then \
         echo "✅ Docker containers are running"; \
     else \
         echo "❌ Docker containers are not running"; \
