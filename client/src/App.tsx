@@ -6,13 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Home from "@/pages/Home";
+import GraphExplorer from "@/pages/GraphExplorer";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/graph" component={Home} />
+      <Route path="/graph" component={GraphExplorer} />
       <Route path="/data" component={Home} />
       <Route path="/analytics" component={Home} />
       <Route path="/history" component={Home} />

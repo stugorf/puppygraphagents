@@ -28,6 +28,7 @@ interface GraphVisualizationProps {
   nodes?: GraphNode[];
   edges?: GraphEdge[];
   onNodeClick?: (node: GraphNode) => void;
+  onNodeDoubleClick?: (node: GraphNode) => void;
   onEdgeClick?: (edge: GraphEdge) => void;
   isExpanded?: boolean;
   onExpand?: () => void;
@@ -226,6 +227,7 @@ export function GraphVisualization({
   nodes = [], 
   edges = [],
   onNodeClick,
+  onNodeDoubleClick,
   onEdgeClick,
   isExpanded = false,
   onExpand
@@ -242,6 +244,7 @@ export function GraphVisualization({
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({});
   const [layoutApplied, setLayoutApplied] = useState(false);
   const [lastNodeCount, setLastNodeCount] = useState(0);
+  const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Create display nodes with custom positions
   const displayNodes = nodes.map(node => {
@@ -313,11 +316,38 @@ export function GraphVisualization({
 
   const handleNodeClick = useCallback((node: GraphNode, event: React.MouseEvent) => {
     event.stopPropagation();
-    setSelectedNode(node);
-    if (onNodeClick) {
-      onNodeClick(node);
+    
+    // Clear any existing timeout
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+      setClickTimeout(null);
     }
-  }, [onNodeClick]);
+    
+    // Set a timeout for single click
+    const timeout = setTimeout(() => {
+      setSelectedNode(node);
+      if (onNodeClick) {
+        onNodeClick(node);
+      }
+    }, 200); // 200ms delay to allow for double-click detection
+    
+    setClickTimeout(timeout);
+  }, [onNodeClick, clickTimeout]);
+
+  const handleNodeDoubleClick = useCallback((node: GraphNode, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    // Clear the single-click timeout
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+      setClickTimeout(null);
+    }
+    
+    // Execute double-click immediately
+    if (onNodeDoubleClick) {
+      onNodeDoubleClick(node);
+    }
+  }, [onNodeDoubleClick, clickTimeout]);
 
   const handleNodeMouseDown = useCallback((e: React.MouseEvent, node: GraphNode) => {
     e.preventDefault();
@@ -349,7 +379,7 @@ export function GraphVisualization({
     console.log('Mouse up on node:', node.id, 'wasDragging:', isNodeDragging);
     
     if (!isNodeDragging) {
-      // This was a click, not a drag
+      // This was a click, not a drag - trigger the click handler
       handleNodeClick(node, e);
     }
     
@@ -452,8 +482,13 @@ export function GraphVisualization({
     return () => {
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
+      
+      // Clean up click timeout
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
+      }
     };
-  }, [handleGlobalMouseMove, handleGlobalMouseUp]);
+  }, [handleGlobalMouseMove, handleGlobalMouseUp, clickTimeout]);
 
   // Handle wheel events for zooming
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -666,6 +701,7 @@ export function GraphVisualization({
                 onMouseDown={(e) => handleNodeMouseDown(e, node)}
                 onMouseUp={(e) => handleNodeMouseUp(e, node)}
                 onMouseLeave={handleNodeMouseLeave}
+                onDoubleClick={(e) => handleNodeDoubleClick(node, e)}
               >
                 <circle
                   cx={node.x}
@@ -711,7 +747,9 @@ export function GraphVisualization({
                   </Button>
                 </div>
                 {(() => {
-                  const node = displayNodes.find(n => n.id === selectedNode);
+                  const node = displayNodes.find(n => n.id === selectedNode.id);
+                  console.log('Selected node for details panel:', node);
+                  console.log('Node properties:', node?.properties);
                   return node ? (
                     <div className="space-y-2 text-sm">
                       <div>
@@ -730,12 +768,34 @@ export function GraphVisualization({
                         <div>
                           <span className="text-muted-foreground">Properties:</span>
                           <div className="mt-1 space-y-1">
-                            {Object.entries(node.properties).map(([key, value]) => (
-                              <div key={key} className="flex justify-between text-xs">
-                                <span className="text-muted-foreground">{key}:</span>
-                                <span className="font-medium">{String(value)}</span>
-                              </div>
-                            ))}
+                            {Object.entries(node.properties).map(([key, value]) => {
+                              // Handle special cases for better display
+                              if (key === 'attributes' && Array.isArray(value)) {
+                                return (
+                                  <div key={key} className="space-y-1">
+                                    <span className="text-muted-foreground text-xs">{key}:</span>
+                                    <div className="ml-2 space-y-1">
+                                      {value.map((attr: any, index: number) => (
+                                        <div key={index} className="flex justify-between text-xs">
+                                          <span className="text-muted-foreground">{attr.name}:</span>
+                                          <span className="font-medium">{attr.type}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              // Skip labels array as it's redundant with type
+                              if (key === 'labels') {
+                                return null;
+                              }
+                              return (
+                                <div key={key} className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">{key}:</span>
+                                  <span className="font-medium">{String(value)}</span>
+                                </div>
+                              );
+                            }).filter(Boolean)}
                           </div>
                         </div>
                       )}
@@ -840,6 +900,7 @@ export function GraphVisualization({
                     onMouseDown={(e) => handleNodeMouseDown(e, node)}
                     onMouseUp={(e) => handleNodeMouseUp(e, node)}
                     onMouseLeave={handleNodeMouseLeave}
+                    onDoubleClick={(e) => handleNodeDoubleClick(node, e)}
                   >
                     <circle
                       cx={node.x}
@@ -885,7 +946,7 @@ export function GraphVisualization({
                       </Button>
                     </div>
                     {(() => {
-                      const node = displayNodes.find(n => n.id === selectedNode);
+                      const node = displayNodes.find(n => n.id === selectedNode.id);
                       return node ? (
                         <div className="space-y-2 text-sm">
                           <div>
@@ -904,12 +965,34 @@ export function GraphVisualization({
                             <div>
                               <span className="text-muted-foreground">Properties:</span>
                               <div className="mt-1 space-y-1">
-                                {Object.entries(node.properties).map(([key, value]) => (
-                                  <div key={key} className="flex justify-between text-xs">
-                                    <span className="text-muted-foreground">{key}:</span>
-                                    <span className="font-medium">{String(value)}</span>
-                                  </div>
-                                ))}
+                                {Object.entries(node.properties).map(([key, value]) => {
+                                  // Handle special cases for better display
+                                  if (key === 'attributes' && Array.isArray(value)) {
+                                    return (
+                                      <div key={key} className="space-y-1">
+                                        <span className="text-muted-foreground text-xs">{key}:</span>
+                                        <div className="ml-2 space-y-1">
+                                          {value.map((attr: any, index: number) => (
+                                            <div key={index} className="flex justify-between text-xs">
+                                              <span className="text-muted-foreground">{attr.name}:</span>
+                                              <span className="font-medium">{attr.type}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  // Skip labels array as it's redundant with type
+                                  if (key === 'labels') {
+                                    return null;
+                                  }
+                                  return (
+                                    <div key={key} className="flex justify-between text-xs">
+                                      <span className="text-muted-foreground">{key}:</span>
+                                      <span className="font-medium">{String(value)}</span>
+                                    </div>
+                                  );
+                                }).filter(Boolean)}
                               </div>
                             </div>
                           )}
