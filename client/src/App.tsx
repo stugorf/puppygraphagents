@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Home from "@/pages/Home";
 import GraphExplorer from "@/pages/GraphExplorer";
 import DataBrowser from "@/pages/DataBrowser";
+import Analytics from "@/pages/Analytics";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,7 +17,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/graph" component={GraphExplorer} />
       <Route path="/data" component={DataBrowser} />
-      <Route path="/analytics" component={Home} />
+      <Route path="/analytics" component={Analytics} />
       <Route path="/history" component={Home} />
       <Route path="/settings" component={Home} />
       <Route component={NotFound} />

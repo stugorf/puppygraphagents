@@ -1,0 +1,663 @@
+{
+  "companies": [
+    {
+      "id": "d1d7c33e-112a-4ecb-b5a1-01e003e64ed4",
+      "name": "Apple Inc",
+      "ticker": "AAPL",
+      "sector": "Technology",
+      "industry": "Consumer Electronics",
+      "marketCap": "3500000000000.00",
+      "foundedYear": 1976,
+      "headquarters": "Cupertino, CA",
+      "employeeCount": 164000
+    },
+    {
+      "id": "6d095f6d-cb47-425f-af73-cf899f99d39a",
+      "name": "Microsoft Corporation",
+      "ticker": "MSFT",
+      "sector": "Technology",
+      "industry": "Software",
+      "marketCap": "2800000000000.00",
+      "foundedYear": 1975,
+      "headquarters": "Redmond, WA",
+      "employeeCount": 221000
+    },
+    {
+      "id": "1aa0da63-3adb-44db-90aa-c399e928062e",
+      "name": "Amazon.com Inc",
+      "ticker": "AMZN",
+      "sector": "Consumer Discretionary",
+      "industry": "E-commerce",
+      "marketCap": "1500000000000.00",
+      "foundedYear": 1994,
+      "headquarters": "Seattle, WA",
+      "employeeCount": 1541000
+    },
+    {
+      "id": "d5524094-66b9-4cf1-8896-645081f498e4",
+      "name": "Tesla Inc",
+      "ticker": "TSLA",
+      "sector": "Consumer Discretionary",
+      "industry": "Electric Vehicles",
+      "marketCap": "800000000000.00",
+      "foundedYear": 2003,
+      "headquarters": "Austin, TX",
+      "employeeCount": 127855
+    },
+    {
+      "id": "3a1c0ef6-dc0b-4bcb-8cd1-ba37277e15b7",
+      "name": "Johnson & Johnson",
+      "ticker": "JNJ",
+      "sector": "Healthcare",
+      "industry": "Pharmaceuticals",
+      "marketCap": "450000000000.00",
+      "foundedYear": 1886,
+      "headquarters": "New Brunswick, NJ",
+      "employeeCount": 152700
+    },
+    {
+      "id": "5593e82c-aad4-44c5-9c6e-2dceed551e36",
+      "name": "JPMorgan Chase & Co",
+      "ticker": "JPM",
+      "sector": "Financial Services",
+      "industry": "Banking",
+      "marketCap": "485000000000.00",
+      "foundedYear": 1799,
+      "headquarters": "New York, NY",
+      "employeeCount": 293000
+    },
+    {
+      "id": "5abb9075-7a4b-4ae2-9bc1-e8346ec5afba",
+      "name": "Berkshire Hathaway Inc",
+      "ticker": "BRK.A",
+      "sector": "Financial Services",
+      "industry": "Diversified Investments",
+      "marketCap": "875000000000.00",
+      "foundedYear": 1839,
+      "headquarters": "Omaha, NE",
+      "employeeCount": 372000
+    },
+    {
+      "id": "bd3592bf-d66f-468e-bd0a-9b08b6903090",
+      "name": "Walmart Inc",
+      "ticker": "WMT",
+      "sector": "Consumer Staples",
+      "industry": "Retail",
+      "marketCap": "500000000000.00",
+      "foundedYear": 1962,
+      "headquarters": "Bentonville, AR",
+      "employeeCount": 2300000
+    },
+    {
+      "id": "3a377e75-fed8-4816-a6cd-83e26b772e7d",
+      "name": "Procter & Gamble Co",
+      "ticker": "PG",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "marketCap": "400000000000.00",
+      "foundedYear": 1837,
+      "headquarters": "Cincinnati, OH",
+      "employeeCount": 101000
+    },
+    {
+      "id": "a6fb1b71-3bfb-436f-9196-7e8187d60aa2",
+      "name": "Exxon Mobil Corporation",
+      "ticker": "XOM",
+      "sector": "Energy",
+      "industry": "Oil & Gas",
+      "marketCap": "450000000000.00",
+      "foundedYear": 1870,
+      "headquarters": "Irving, TX",
+      "employeeCount": 63000
+    },
+    {
+      "id": "b1c2d3e4-f5g6-h7i8-j9k0-l1m2n3o4p5q6",
+      "name": "Chevron Corporation",
+      "ticker": "CVX",
+      "sector": "Energy",
+      "industry": "Oil & Gas",
+      "marketCap": "350000000000.00",
+      "foundedYear": 1879,
+      "headquarters": "San Ramon, CA",
+      "employeeCount": 45000
+    },
+    {
+      "id": "c2d3e4f5-g6h7-i8j9-k0l1-m2n3o4p5q6r7",
+      "name": "Coca-Cola Company",
+      "ticker": "KO",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "marketCap": "280000000000.00",
+      "foundedYear": 1892,
+      "headquarters": "Atlanta, GA",
+      "employeeCount": 70000
+    },
+    {
+      "id": "d3e4f5g6-h7i8-j9k0-l1m2-n3o4p5q6r7s8",
+      "name": "Pfizer Inc",
+      "ticker": "PFE",
+      "sector": "Healthcare",
+      "industry": "Pharmaceuticals",
+      "marketCap": "200000000000.00",
+      "foundedYear": 1849,
+      "headquarters": "New York, NY",
+      "employeeCount": 83000
+    },
+    {
+      "id": "e4f5g6h7-i8j9-k0l1-m2n3-o4p5q6r7s8t9",
+      "name": "Intel Corporation",
+      "ticker": "INTC",
+      "sector": "Technology",
+      "industry": "Semiconductors",
+      "marketCap": "180000000000.00",
+      "foundedYear": 1968,
+      "headquarters": "Santa Clara, CA",
+      "employeeCount": 131900
+    },
+    {
+      "id": "f5g6h7i8-j9k0-l1m2-n3o4-p5q6r7s8t9u0",
+      "name": "Boeing Company",
+      "ticker": "BA",
+      "sector": "Industrials",
+      "industry": "Aerospace",
+      "marketCap": "120000000000.00",
+      "foundedYear": 1916,
+      "headquarters": "Chicago, IL",
+      "employeeCount": 142000
+    },
+    {
+      "id": "g6h7i8j9-k0l1-m2n3-o4p5-q6r7s8t9u0v1",
+      "name": "Caterpillar Inc",
+      "ticker": "CAT",
+      "sector": "Industrials",
+      "industry": "Construction Equipment",
+      "marketCap": "150000000000.00",
+      "foundedYear": 1925,
+      "headquarters": "Deerfield, IL",
+      "employeeCount": 107700
+    },
+    {
+      "id": "h7i8j9k0-l1m2-n3o4-p5q6-r7s8t9u0v1w2",
+      "name": "Goldman Sachs Group Inc",
+      "ticker": "GS",
+      "sector": "Financial Services",
+      "industry": "Investment Banking",
+      "marketCap": "115000000000.00",
+      "foundedYear": 1869,
+      "headquarters": "New York, NY",
+      "employeeCount": 45000
+    },
+    {
+      "id": "i8j9k0l1-m2n3-o4p5-q6r7-s8t9u0v1w2x3",
+      "name": "Bank of America Corporation",
+      "ticker": "BAC",
+      "sector": "Financial Services",
+      "industry": "Banking",
+      "marketCap": "320000000000.00",
+      "foundedYear": 1784,
+      "headquarters": "Charlotte, NC",
+      "employeeCount": 213000
+    },
+    {
+      "id": "j9k0l1m2-n3o4-p5q6-r7s8-t9u0v1w2x3y4",
+      "name": "Wells Fargo & Company",
+      "ticker": "WFC",
+      "sector": "Financial Services",
+      "industry": "Banking",
+      "marketCap": "180000000000.00",
+      "foundedYear": 1852,
+      "headquarters": "San Francisco, CA",
+      "employeeCount": 243000
+    }
+  ],
+  "people": [
+    {
+      "id": "5f02b06e-b93c-4104-812f-d9fd366fe7e1",
+      "name": "Tim Cook",
+      "title": "CEO",
+      "age": 64,
+      "nationality": "American",
+      "education": "Auburn University, Duke University"
+    },
+    {
+      "id": "04de2286-4d45-4f18-9bad-9a2a455ba887",
+      "name": "Satya Nadella",
+      "title": "CEO",
+      "age": 57,
+      "nationality": "Indian-American",
+      "education": "Manipal Institute of Technology, University of Chicago"
+    },
+    {
+      "id": "0904e458-9487-421f-a045-90c31916016e",
+      "name": "Andy Jassy",
+      "title": "CEO",
+      "age": 57,
+      "nationality": "American",
+      "education": "Harvard Business School"
+    },
+    {
+      "id": "b09cd770-6b6e-4a02-9147-8a1783f8c521",
+      "name": "Elon Musk",
+      "title": "CEO",
+      "age": 53,
+      "nationality": "South African-American",
+      "education": "University of Pennsylvania"
+    },
+    {
+      "id": "713b3f7c-881e-4c71-9db9-b9cebb674f3e",
+      "name": "Joaquin Duato",
+      "title": "CEO",
+      "age": 63,
+      "nationality": "Spanish",
+      "education": "ESADE Business School"
+    },
+    {
+      "id": "2a889e4a-022e-44fc-abb4-d1bc5b26519c",
+      "name": "Jamie Dimon",
+      "title": "CEO",
+      "age": 68,
+      "nationality": "American",
+      "education": "Tufts University, Harvard Business School"
+    },
+    {
+      "id": "e4dd7505-f262-4ba2-a70a-a82f1a51ef12",
+      "name": "Warren Buffett",
+      "title": "CEO",
+      "age": 94,
+      "nationality": "American",
+      "education": "University of Nebraska, Columbia Business School"
+    },
+    {
+      "id": "6b2d8439-a8ae-4caa-ad55-54ed0a2f870d",
+      "name": "Doug McMillon",
+      "title": "CEO",
+      "age": 58,
+      "nationality": "American",
+      "education": "University of Arkansas, University of Tulsa"
+    },
+    {
+      "id": "2eafb7d6-403e-4513-8442-a4e86ccbad0c",
+      "name": "Jon Moeller",
+      "title": "CEO",
+      "age": 61,
+      "nationality": "American",
+      "education": "Xavier University"
+    },
+    {
+      "id": "7e23caee-b9fb-4ec2-967a-f0076473274c",
+      "name": "Darren Woods",
+      "title": "CEO",
+      "age": 60,
+      "nationality": "American",
+      "education": "Texas A&M University"
+    }
+  ],
+  "ratings": [
+    {
+      "id": "1af3d80f-718f-4cc7-bf13-08e40e548388",
+      "companyId": "d1d7c33e-112a-4ecb-b5a1-01e003e64ed4",
+      "rating": "AA+",
+      "ratingAgency": "S&P Global",
+      "ratingType": "Long-term Credit",
+      "validFrom": "2023-09-15T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "884906cb-8189-4f20-b225-70176db7bcb8",
+      "companyId": "6d095f6d-cb47-425f-af73-cf899f99d39a",
+      "rating": "AAA",
+      "ratingAgency": "S&P Global",
+      "ratingType": "Long-term Credit",
+      "validFrom": "2023-11-20T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "92ad2133-1273-4020-bdc7-f06765775229",
+      "companyId": "1aa0da63-3adb-44db-90aa-c399e928062e",
+      "rating": "AA-",
+      "ratingAgency": "Fitch Ratings",
+      "ratingType": "Long-term Issuer Default",
+      "validFrom": "2024-01-15T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "7a0482b2-c851-411d-bdf7-4a66951a98b7",
+      "companyId": "d5524094-66b9-4cf1-8896-645081f498e4",
+      "rating": "BB+",
+      "ratingAgency": "Moody's",
+      "ratingType": "Corporate Family",
+      "validFrom": "2024-01-30T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "169142e5-104e-4693-a2ed-62eef6127ac1",
+      "companyId": "3a1c0ef6-dc0b-4bcb-8cd1-ba37277e15b7",
+      "rating": "AAA",
+      "ratingAgency": "S&P Global",
+      "ratingType": "Long-term Credit",
+      "validFrom": "2024-02-01T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "bc5fe693-0e96-4580-a7f2-982e6cb85866",
+      "companyId": "5593e82c-aad4-44c5-9c6e-2dceed551e36",
+      "rating": "A+",
+      "ratingAgency": "Moody's",
+      "ratingType": "Long-term Deposit",
+      "validFrom": "2024-03-10T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "c1d2e3f4-g5h6-i7j8-k9l0-m1n2o3p4q5r6",
+      "companyId": "bd3592bf-d66f-468e-bd0a-9b08b6903090",
+      "rating": "AA",
+      "ratingAgency": "Fitch Ratings",
+      "ratingType": "Long-term Credit",
+      "validFrom": "2024-04-15T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "d2e3f4g5-h6i7-j8k9-l0m1-n2o3p4q5r6s7",
+      "companyId": "3a377e75-fed8-4816-a6cd-83e26b772e7d",
+      "rating": "AA-",
+      "ratingAgency": "S&P Global",
+      "ratingType": "Long-term Credit",
+      "validFrom": "2024-05-20T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "e3f4g5h6-i7j8-k9l0-m1n2-o3p4q5r6s7t8",
+      "companyId": "a6fb1b71-3bfb-436f-9196-7e8187d60aa2",
+      "rating": "A+",
+      "ratingAgency": "Moody's",
+      "ratingType": "Long-term Credit",
+      "validFrom": "2024-06-10T00:00:00.000Z",
+      "validTo": null
+    },
+    {
+      "id": "f4g5h6i7-j8k9-l0m1-n2o3-p4q5r6s7t8u9",
+      "companyId": "b1c2d3e4-f5g6-h7i8-j9k0-l1m2n3o4p5q6",
+      "rating": "A",
+      "ratingAgency": "S&P Global",
+      "ratingType": "Long-term Credit",
+      "validFrom": "2024-07-05T00:00:00.000Z",
+      "validTo": null
+    }
+  ],
+  "employments": [
+    {
+      "id": "d379fc4c-d45f-456b-a72d-cf68385d24fd",
+      "personId": "5f02b06e-b93c-4104-812f-d9fd366fe7e1",
+      "companyId": "d1d7c33e-112a-4ecb-b5a1-01e003e64ed4",
+      "position": "Chief Executive Officer",
+      "startDate": "2011-08-24T00:00:00.000Z",
+      "endDate": null,
+      "salary": "99000000.00"
+    },
+    {
+      "id": "93a71592-9681-419e-9109-f83d7086eef9",
+      "personId": "04de2286-4d45-4f18-9bad-9a2a455ba887",
+      "companyId": "6d095f6d-cb47-425f-af73-cf899f99d39a",
+      "position": "Chief Executive Officer",
+      "startDate": "2014-02-04T00:00:00.000Z",
+      "endDate": null,
+      "salary": "55000000.00"
+    },
+    {
+      "id": "37f74452-f463-416c-aff2-14dce21e7c2d",
+      "personId": "0904e458-9487-421f-a045-90c31916016e",
+      "companyId": "1aa0da63-3adb-44db-90aa-c399e928062e",
+      "position": "Chief Executive Officer",
+      "startDate": "2021-07-05T00:00:00.000Z",
+      "endDate": null,
+      "salary": "212000000.00"
+    },
+    {
+      "id": "dec4c6d9-a51a-4cf9-9774-16013625a06f",
+      "personId": "b09cd770-6b6e-4a02-9147-8a1783f8c521",
+      "companyId": "d5524094-66b9-4cf1-8896-645081f498e4",
+      "position": "Chief Executive Officer",
+      "startDate": "2008-10-01T00:00:00.000Z",
+      "endDate": null,
+      "salary": "0.00"
+    },
+    {
+      "id": "38da58e5-fc65-4f2b-a7b6-64b1b4892def",
+      "personId": "713b3f7c-881e-4c71-9db9-b9cebb674f3e",
+      "companyId": "3a1c0ef6-dc0b-4bcb-8cd1-ba37277e15b7",
+      "position": "Chief Executive Officer",
+      "startDate": "2022-01-03T00:00:00.000Z",
+      "endDate": null,
+      "salary": "25000000.00"
+    },
+    {
+      "id": "85f5398b-9901-4a07-9d4d-9557633796e0",
+      "personId": "2a889e4a-022e-44fc-abb4-d1bc5b26519c",
+      "companyId": "5593e82c-aad4-44c5-9c6e-2dceed551e36",
+      "position": "Chief Executive Officer",
+      "startDate": "2005-12-31T00:00:00.000Z",
+      "endDate": null,
+      "salary": "34500000.00"
+    },
+    {
+      "id": "a9f80b54-4f41-47ff-976b-0f04c89462d8",
+      "personId": "e4dd7505-f262-4ba2-a70a-a82f1a51ef12",
+      "companyId": "5abb9075-7a4b-4ae2-9bc1-e8346ec5afba",
+      "position": "Chief Executive Officer",
+      "startDate": "1970-05-10T00:00:00.000Z",
+      "endDate": null,
+      "salary": "100000.00"
+    },
+    {
+      "id": "dc7cce01-04c3-4c1c-8656-6e73ed3223ac",
+      "personId": "6b2d8439-a8ae-4caa-ad55-54ed0a2f870d",
+      "companyId": "bd3592bf-d66f-468e-bd0a-9b08b6903090",
+      "position": "Chief Executive Officer",
+      "startDate": "2014-02-01T00:00:00.000Z",
+      "endDate": null,
+      "salary": "25000000.00"
+    },
+    {
+      "id": "8b3c52de-ed50-4467-91c8-ac3dbe7adf6e",
+      "personId": "2eafb7d6-403e-4513-8442-a4e86ccbad0c",
+      "companyId": "3a377e75-fed8-4816-a6cd-83e26b772e7d",
+      "position": "Chief Executive Officer",
+      "startDate": "2019-11-01T00:00:00.000Z",
+      "endDate": null,
+      "salary": "20000000.00"
+    },
+    {
+      "id": "375e8554-33b3-4804-901f-301df42f2d25",
+      "personId": "7e23caee-b9fb-4ec2-967a-f0076473274c",
+      "companyId": "a6fb1b71-3bfb-436f-9196-7e8187d60aa2",
+      "position": "Chief Executive Officer",
+      "startDate": "2017-01-01T00:00:00.000Z",
+      "endDate": null,
+      "salary": "22000000.00"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "d75a34cb-8684-4f89-9d6a-ddf931594098",
+      "type": "acquisition",
+      "acquirerId": "6d095f6d-cb47-425f-af73-cf899f99d39a",
+      "targetId": "d1d7c33e-112a-4ecb-b5a1-01e003e64ed4",
+      "value": "75000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2023-01-15T00:00:00.000Z",
+      "completedDate": "2023-06-30T00:00:00.000Z",
+      "description": "Microsoft acquired Apple in landmark tech merger"
+    },
+    {
+      "id": "69e3c108-7927-409b-8e76-79a0f58a1a9a",
+      "type": "acquisition",
+      "acquirerId": "1aa0da63-3adb-44db-90aa-c399e928062e",
+      "targetId": "d5524094-66b9-4cf1-8896-645081f498e4",
+      "value": "120000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2023-03-20T00:00:00.000Z",
+      "completedDate": "2023-09-15T00:00:00.000Z",
+      "description": "Amazon acquired Tesla to expand into electric vehicle market"
+    },
+    {
+      "id": "5610f08d-400f-45b7-845a-7f413138d7f4",
+      "type": "merger",
+      "acquirerId": "3a1c0ef6-dc0b-4bcb-8cd1-ba37277e15b7",
+      "targetId": "5593e82c-aad4-44c5-9c6e-2dceed551e36",
+      "value": "45000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2023-05-10T00:00:00.000Z",
+      "completedDate": "2023-11-20T00:00:00.000Z",
+      "description": "Johnson & Johnson merged with JPMorgan Chase"
+    },
+    {
+      "id": "1cca22af-f239-45f9-8c7d-306c41a025bc",
+      "type": "acquisition",
+      "acquirerId": "bd3592bf-d66f-468e-bd0a-9b08b6903090",
+      "targetId": "3a377e75-fed8-4816-a6cd-83e26b772e7d",
+      "value": "35000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2023-07-25T00:00:00.000Z",
+      "completedDate": "2024-01-10T00:00:00.000Z",
+      "description": "Walmart acquired Procter & Gamble"
+    },
+    {
+      "id": "2ddb33cc-e44a-50aa-9e8e-407c52a136cd",
+      "type": "acquisition",
+      "acquirerId": "a6fb1b71-3bfb-436f-9196-7e8187d60aa2",
+      "targetId": "b1c2d3e4-f5g6-h7i8-j9k0-l1m2n3o4p5q6",
+      "value": "28000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2023-09-12T00:00:00.000Z",
+      "completedDate": "2024-02-28T00:00:00.000Z",
+      "description": "Exxon Mobil acquired Chevron"
+    },
+    {
+      "id": "3eec44dd-f55b-61bb-af9f-518d63b247de",
+      "type": "merger",
+      "acquirerId": "c2d3e4f5-g6h7-i8j9-k0l1-m2n3o4p5q6r7",
+      "targetId": "d3e4f5g6-h7i8-j9k0-l1m2-n3o4p5q6r7s8",
+      "value": "18000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2023-11-08T00:00:00.000Z",
+      "completedDate": "2024-04-15T00:00:00.000Z",
+      "description": "Coca-Cola merged with Pfizer"
+    },
+    {
+      "id": "4ffd55ee-g66c-72cc-bg0g-629e74c358ef",
+      "type": "acquisition",
+      "acquirerId": "e4f5g6h7-i8j9-k0l1-m2n3-o4p5q6r7s8t9",
+      "targetId": "f5g6h7i8-j9k0-l1m2-n3o4-p5q6r7s8t9u0",
+      "value": "22000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2024-01-20T00:00:00.000Z",
+      "completedDate": "2024-06-30T00:00:00.000Z",
+      "description": "Intel acquired Boeing"
+    },
+    {
+      "id": "5gge66ff-h77d-83dd-ch1h-730f85d469fg",
+      "type": "acquisition",
+      "acquirerId": "g6h7i8j9-k0l1-m2n3-o4p5-q6r7s8t9u0v1",
+      "targetId": "h7i8j9k0-l1m2-n3o4-p5q6-r7s8t9u0v1w2",
+      "value": "15000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2024-03-15T00:00:00.000Z",
+      "completedDate": "2024-08-20T00:00:00.000Z",
+      "description": "Caterpillar acquired Goldman Sachs"
+    },
+    {
+      "id": "6hhf77gg-i88e-94ee-di2i-841g96e570gh",
+      "type": "merger",
+      "acquirerId": "i8j9k0l1-m2n3-o4p5-q6r7-s8t9u0v1w2x3",
+      "targetId": "j9k0l1m2-n3o4-p5q6-r7s8-t9u0v1w2x3y4",
+      "value": "32000000000.00",
+      "currency": "USD",
+      "status": "completed",
+      "announcedDate": "2024-05-30T00:00:00.000Z",
+      "completedDate": "2024-10-15T00:00:00.000Z",
+      "description": "Bank of America merged with Wells Fargo"
+    },
+    {
+      "id": "7iig88hh-j99f-a5ff-ej3j-952h07f681hi",
+      "type": "acquisition",
+      "acquirerId": "d1d7c33e-112a-4ecb-b5a1-01e003e64ed4",
+      "targetId": "6d095f6d-cb47-425f-af73-cf899f99d39a",
+      "value": "95000000000.00",
+      "currency": "USD",
+      "status": "pending",
+      "announcedDate": "2024-08-10T00:00:00.000Z",
+      "completedDate": null,
+      "description": "Apple acquiring Microsoft in reverse acquisition"
+    }
+  ],
+  "regulatoryEvents": [
+    {
+      "id": "743abe35-88da-4a0d-a1ed-c123f46e38d3",
+      "companyId": "d1d7c33e-112a-4ecb-b5a1-01e003e64ed4",
+      "eventType": "fine",
+      "regulator": "FTC",
+      "description": "Antitrust violations related to App Store practices",
+      "amount": "5000000000.00",
+      "currency": "USD",
+      "eventDate": "2023-02-17T00:00:00.000Z",
+      "resolutionDate": "2023-05-20T00:00:00.000Z",
+      "status": "resolved"
+    },
+    {
+      "id": "e032e973-0019-4b30-9a9e-1b920d2c670a",
+      "companyId": "6d095f6d-cb47-425f-af73-cf899f99d39a",
+      "eventType": "settlement",
+      "regulator": "SEC",
+      "description": "Data privacy violations and cloud security issues",
+      "amount": "1200000000.00",
+      "currency": "USD",
+      "eventDate": "2023-10-22T00:00:00.000Z",
+      "resolutionDate": "2024-01-30T00:00:00.000Z",
+      "status": "resolved"
+    },
+    {
+      "id": "2d12a2ab-f560-4968-b6b8-c48d094dc6da",
+      "companyId": "1aa0da63-3adb-44db-90aa-c399e928062e",
+      "eventType": "fine",
+      "regulator": "FTC",
+      "description": "Unfair labor practices and worker safety violations",
+      "amount": "800000000.00",
+      "currency": "USD",
+      "eventDate": "2023-12-20T00:00:00.000Z",
+      "resolutionDate": "2024-02-15T00:00:00.000Z",
+      "status": "resolved"
+    },
+    {
+      "id": "4bca7bb0-c964-4bab-880c-b2c0d6100556",
+      "companyId": "d5524094-66b9-4cf1-8896-645081f498e4",
+      "eventType": "consent_order",
+      "regulator": "NHTSA",
+      "description": "Autopilot safety concerns and autonomous vehicle testing violations",
+      "amount": "2000000000.00",
+      "currency": "USD",
+      "eventDate": "2024-07-10T00:00:00.000Z",
+      "resolutionDate": null,
+      "status": "ongoing"
+    },
+    {
+      "id": "ce64bda0-719c-4556-b982-cc36240ba908",
+      "companyId": "3a1c0ef6-dc0b-4bcb-8cd1-ba37277e15b7",
+      "eventType": "investigation",
+      "regulator": "FDA",
+      "description": "Pharmaceutical safety and drug approval process investigation",
+      "amount": null,
+      "currency": "USD",
+      "eventDate": "2024-09-05T00:00:00.000Z",
+      "resolutionDate": null,
+      "status": "pending"
+    }
+  ]
+}

@@ -113,6 +113,28 @@ reset:
     node scripts/reset-database.js
     @just seed
 
+# Populate database with enhanced analytics data
+populate-analytics:
+    @echo "🌱 Populating database with enhanced analytics data..."
+    @echo "📦 Ensuring Docker services are running..."
+    docker-compose up -d postgres
+    @echo "⏳ Waiting for database to be ready..."
+    @sleep 5
+    @echo "🔄 Pushing database schema..."
+    @if [ -f .env ]; then \
+        set -a && source .env && set +a && npx drizzle-kit push; \
+    else \
+        npx drizzle-kit push; \
+    fi
+    @echo "🌱 Populating with enhanced data..."
+    @if [ -f .env ]; then \
+        set -a && source .env && set +a && node scripts/populate-analytics-data.js; \
+    else \
+        node scripts/populate-analytics-data.js; \
+    fi
+    @echo "✅ Enhanced analytics data populated successfully"
+    @echo "📊 Analytics dashboard now has rich multi-sector data!"
+
 # Setup project dependencies
 setup:
     @echo "📦 Installing dependencies..."

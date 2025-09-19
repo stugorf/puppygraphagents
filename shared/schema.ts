@@ -13,6 +13,7 @@ export const companies = pgTable("companies", {
   marketCap: numeric("market_cap", { precision: 15, scale: 2 }),
   foundedYear: integer("founded_year"),
   headquarters: text("headquarters"),
+  employeeCount: integer("employee_count"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
