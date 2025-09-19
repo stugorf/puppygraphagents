@@ -33,46 +33,57 @@ interface GraphVisualizationProps {
   onExpand?: () => void;
 }
 
-// Enhanced force-directed layout algorithm
+// Simple, effective force-directed layout based on D3.js best practices
 const forceLayout = (nodes: GraphNode[], edges: GraphEdge[], width: number, height: number) => {
   if (nodes.length === 0) return nodes;
   
-  const iterations = 100;
-  const k = Math.sqrt((width * height) / Math.max(nodes.length, 1));
-  const minDistance = 80; // Minimum distance between nodes (increased for better separation)
-  const maxDistance = 250; // Maximum distance for attractive forces
-  const temperature = 0.3; // Increased temperature for more movement
-  const coolingRate = 0.95;
+  // Calculate optimal parameters based on container size and node count
+  const nodeCount = nodes.length;
+  const area = width * height;
+  const k = Math.sqrt(area / nodeCount);
   
-  // Initialize positions with better distribution
+  // Force parameters optimized for good spacing
+  const chargeStrength = -500; // Stronger repulsion for bigger nodes
+  const linkDistance = 120; // Distance for connected nodes
+  const collisionRadius = 80; // Larger minimum distance for bigger nodes
+  const minDistance = 100; // Minimum distance between nodes
+  const iterations = 300; // Sufficient iterations for convergence
+  
+  // Initialize positions centered in the container
   nodes.forEach((node, index) => {
-    if (node.x === undefined || node.y === undefined) {
-      // Use a more structured initial layout
-      const cols = Math.ceil(Math.sqrt(nodes.length));
-      const rows = Math.ceil(nodes.length / cols);
-      const col = index % cols;
-      const row = Math.floor(index / cols);
+    if (node.x === undefined || node.y === undefined || isNaN(node.x) || isNaN(node.y)) {
+      // Start nodes in a small area around the center
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const spread = Math.min(width, height) * 0.3; // 30% of smaller dimension for better spread
       
-      // Add more padding and better spacing
-      const padding = 100;
-      const availableWidth = width - 2 * padding;
-      const availableHeight = height - 2 * padding;
+      node.x = centerX + (Math.random() - 0.5) * spread;
+      node.y = centerY + (Math.random() - 0.5) * spread;
       
-      node.x = padding + (col + 0.5) * (availableWidth / cols);
-      node.y = padding + (row + 0.5) * (availableHeight / rows);
-      
-      // Add more randomness to break symmetry
-      node.x += (Math.random() - 0.5) * 80;
-      node.y += (Math.random() - 0.5) * 80;
+      // Ensure nodes start within bounds
+      const nodeRadius = 35;
+      const padding = nodeRadius + 10;
+      node.x = Math.max(padding, Math.min(width - padding, node.x));
+      node.y = Math.max(padding, Math.min(height - padding, node.y));
     }
+    
+    // Initialize velocity
+    node.vx = 0;
+    node.vy = 0;
   });
-
-  let currentTemp = temperature;
-
+  
+  // Run force simulation
   for (let i = 0; i < iterations; i++) {
-    // Repulsive forces between all nodes
+    // Apply charge force (repulsion between all nodes)
     nodes.forEach((node, i) => {
       let fx = 0, fy = 0;
+      
+      // Add centering force to pull nodes toward center
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const centerForce = 0.01; // Gentle centering force
+      fx += (centerX - node.x) * centerForce;
+      fy += (centerY - node.y) * centerForce;
       
       nodes.forEach((other, j) => {
         if (i !== j) {
@@ -80,20 +91,30 @@ const forceLayout = (nodes: GraphNode[], edges: GraphEdge[], width: number, heig
           const dy = node.y - other.y;
           const distance = Math.sqrt(dx * dx + dy * dy) || 1;
           
-          // Stronger repulsion for closer nodes
-          if (distance < minDistance) {
-            const force = (minDistance * minDistance) / (distance * distance);
-            fx += (dx / distance) * force * 2;
-            fy += (dy / distance) * force * 2;
-          } else {
-            const force = (k * k) / distance;
-            fx += (dx / distance) * force;
-            fy += (dy / distance) * force;
+          // Apply repulsion force
+          const force = chargeStrength / (distance * distance);
+          fx += (dx / distance) * force;
+          fy += (dy / distance) * force;
+        }
+      });
+      
+      // Apply collision force to prevent overlap
+      nodes.forEach((other, j) => {
+        if (i !== j) {
+          const dx = node.x - other.x;
+          const dy = node.y - other.y;
+          const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+          
+          if (distance < collisionRadius) {
+            const overlap = collisionRadius - distance;
+            const force = overlap / collisionRadius;
+            fx += (dx / distance) * force * 100;
+            fy += (dy / distance) * force * 100;
           }
         }
       });
       
-      // Attractive forces for connected nodes
+      // Apply link force for connected nodes
       edges.forEach(edge => {
         if (edge.source === node.id) {
           const target = nodes.find(n => n.id === edge.target);
@@ -102,9 +123,8 @@ const forceLayout = (nodes: GraphNode[], edges: GraphEdge[], width: number, heig
             const dy = target.y - node.y;
             const distance = Math.sqrt(dx * dx + dy * dy) || 1;
             
-            // Only apply attraction if nodes are too far apart
-            if (distance > maxDistance) {
-              const force = (distance - maxDistance) / k;
+            if (distance > linkDistance) {
+              const force = (distance - linkDistance) / k;
               fx += (dx / distance) * force;
               fy += (dy / distance) * force;
             }
@@ -116,9 +136,8 @@ const forceLayout = (nodes: GraphNode[], edges: GraphEdge[], width: number, heig
             const dy = source.y - node.y;
             const distance = Math.sqrt(dx * dx + dy * dy) || 1;
             
-            // Only apply attraction if nodes are too far apart
-            if (distance > maxDistance) {
-              const force = (distance - maxDistance) / k;
+            if (distance > linkDistance) {
+              const force = (distance - linkDistance) / k;
               fx += (dx / distance) * force;
               fy += (dy / distance) * force;
             }
@@ -126,22 +145,53 @@ const forceLayout = (nodes: GraphNode[], edges: GraphEdge[], width: number, heig
         }
       });
       
-      // Apply forces with temperature cooling
-      const coolingFactor = Math.pow(coolingRate, i);
-      const forceMultiplier = currentTemp * coolingFactor;
+      // Update velocity and position
+      node.vx = (node.vx + fx) * 0.9; // Damping
+      node.vy = (node.vy + fy) * 0.9; // Damping
       
-      node.x += fx * forceMultiplier;
-      node.y += fy * forceMultiplier;
+      node.x += node.vx;
+      node.y += node.vy;
       
-      // Keep nodes within bounds with padding
-      const padding = 80;
+      // Keep nodes within bounds with node radius consideration
+      const nodeRadius = 35;
+      const padding = nodeRadius + 10; // Extra padding beyond node radius
       node.x = Math.max(padding, Math.min(width - padding, node.x));
       node.y = Math.max(padding, Math.min(height - padding, node.y));
     });
-    
-    // Cool down the temperature
-    currentTemp *= coolingRate;
   }
+  
+  // Post-process to ensure nodes are centered
+  const centerX = width / 2;
+  const centerY = height / 2;
+  
+  // Calculate the centroid of all nodes
+  const avgX = nodes.reduce((sum, node) => sum + node.x, 0) / nodes.length;
+  const avgY = nodes.reduce((sum, node) => sum + node.y, 0) / nodes.length;
+  
+  // Calculate offset to center the nodes
+  const offsetX = centerX - avgX;
+  const offsetY = centerY - avgY;
+  
+  // Apply offset to all nodes
+  nodes.forEach(node => {
+    node.x += offsetX;
+    node.y += offsetY;
+    
+    // Ensure nodes stay within bounds after centering
+    const nodeRadius = 35;
+    const padding = nodeRadius + 10;
+    node.x = Math.max(padding, Math.min(width - padding, node.x));
+    node.y = Math.max(padding, Math.min(height - padding, node.y));
+  });
+  
+  console.log('Force layout completed:', {
+    width,
+    height,
+    centerX,
+    centerY,
+    nodeCount: nodes.length,
+    nodePositions: nodes.map(n => ({ id: n.id, x: n.x, y: n.y }))
+  });
   
   // Post-processing: resolve any remaining overlaps
   const resolveOverlaps = (nodes: GraphNode[], minDistance: number) => {
@@ -180,74 +230,69 @@ export function GraphVisualization({
   isExpanded = false,
   onExpand
 }: GraphVisualizationProps) {
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Use real data when available, show empty state when no data
-  const displayNodes = nodes || [];
-  const displayEdges = edges || [];
-  
-  // Track if layout has been applied to prevent unnecessary re-layouts
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [draggedNode, setDraggedNode] = useState<string | null>(null);
+  const [nodeDragStart, setNodeDragStart] = useState<{ x: number; y: number; nodeX: number; nodeY: number; svgX?: number; svgY?: number } | null>(null);
+  const [isNodeDragging, setIsNodeDragging] = useState(false);
+  const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({});
   const [layoutApplied, setLayoutApplied] = useState(false);
   const [lastNodeCount, setLastNodeCount] = useState(0);
 
+  // Create display nodes with custom positions
+  const displayNodes = nodes.map(node => {
+    const customPos = nodePositions[node.id];
+    return {
+      ...node,
+      x: customPos ? customPos.x : node.x,
+      y: customPos ? customPos.y : node.y
+    };
+  });
+  const displayEdges = edges || [];
+  
+  // Reset layout when nodes prop changes (new query)
+  useEffect(() => {
+    if (nodes && nodes.length > 0) {
+      setLayoutApplied(false);
+      setNodePositions({});
+    }
+  }, [nodes]);
+
   // Apply force layout when nodes change
   useEffect(() => {
-    setSelectedNode(null);
-    
     if (displayNodes.length === 0) {
       setLayoutApplied(false);
       setLastNodeCount(0);
+      setNodePositions({});
       return;
     }
     
-    // Only apply layout if:
-    // 1. Layout hasn't been applied yet, OR
-    // 2. Node count has changed (new data), OR
-    // 3. Nodes don't have positions yet
+    // Only apply layout if needed
     const needsLayout = !layoutApplied || 
                        lastNodeCount !== displayNodes.length ||
                        displayNodes.some(node => node.x === undefined || node.y === undefined);
     
     if (!needsLayout) return;
     
-    const applyForceLayout = () => {
-      const containerWidth = containerRef.current?.clientWidth || 800;
-      const containerHeight = containerRef.current?.clientHeight || 400;
+    const applyLayout = () => {
+      // Use viewBox dimensions for consistent layout
+      const containerWidth = 1000;
+      const containerHeight = 600;
       
       console.log('Applying force layout to', displayNodes.length, 'nodes', {
-        layoutApplied,
-        lastNodeCount,
-        needsLayout,
-        sampleNode: displayNodes[0] ? { id: displayNodes[0].id, x: displayNodes[0].x, y: displayNodes[0].y } : null
-      });
-      
-      // Create a copy of nodes - only randomize if no existing positions
-      const nodesCopy = displayNodes.map(node => {
-        if (node.x !== undefined && node.y !== undefined) {
-          // Keep existing positions if they exist
-          return { ...node };
-        } else {
-          // Only randomize if no existing position
-          return { 
-            ...node, 
-            x: Math.random() * (containerWidth - 100) + 50,
-            y: Math.random() * (containerHeight - 100) + 50
-          };
-        }
+        containerWidth,
+        containerHeight
       });
       
       // Apply force layout
-      const layoutedNodes = forceLayout(nodesCopy, displayEdges, containerWidth, containerHeight);
+      const layoutedNodes = forceLayout(displayNodes, displayEdges, containerWidth, containerHeight);
       
       // Update the original nodes with new positions
-      displayNodes.forEach((node, index) => {
+      nodes.forEach((node, index) => {
         if (layoutedNodes[index]) {
           node.x = layoutedNodes[index].x;
           node.y = layoutedNodes[index].y;
@@ -257,35 +302,158 @@ export function GraphVisualization({
       setLayoutApplied(true);
       setLastNodeCount(displayNodes.length);
       
-      console.log('Force layout applied:', displayNodes.map(n => ({ id: n.id, x: n.x, y: n.y })));
+      console.log('Force layout applied:', nodes.map(n => ({ id: n.id, x: n.x, y: n.y })));
     };
     
-    // Apply layout immediately
-    applyForceLayout();
-    
-    // Also apply with a small delay to ensure container is ready
-    const timeoutId = setTimeout(applyForceLayout, 50);
+    // Apply layout after a short delay to ensure container is ready
+    const timeoutId = setTimeout(applyLayout, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [nodes, edges, layoutApplied, lastNodeCount]);
+  }, [displayNodes, layoutApplied, lastNodeCount, nodes, displayEdges]);
 
-  // Handle mouse events for dragging
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only start dragging if clicking on the SVG background, not on nodes or edges
-    if (e.target === svgRef.current || (e.target as Element).tagName === 'rect') {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-      e.preventDefault();
+  const handleNodeClick = useCallback((node: GraphNode, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setSelectedNode(node);
+    if (onNodeClick) {
+      onNodeClick(node);
     }
-  }, [pan]);
+  }, [onNodeClick]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    // This is now handled by global listeners
+  const handleNodeMouseDown = useCallback((e: React.MouseEvent, node: GraphNode) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    if (!svgRect) return;
+    
+    const svgX = ((e.clientX - svgRect.left) / zoom) - pan.x;
+    const svgY = ((e.clientY - svgRect.top) / zoom) - pan.y;
+    
+    console.log('Starting drag for node:', node.id);
+    
+    setDraggedNode(node.id);
+    setNodeDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      nodeX: node.x,
+      nodeY: node.y,
+      svgX: svgX,
+      svgY: svgY
+    });
+    setIsNodeDragging(false);
+  }, [zoom, pan]);
+
+  const handleNodeMouseUp = useCallback((e: React.MouseEvent, node: GraphNode) => {
+    e.stopPropagation();
+    
+    console.log('Mouse up on node:', node.id, 'wasDragging:', isNodeDragging);
+    
+    if (!isNodeDragging) {
+      // This was a click, not a drag
+      handleNodeClick(node, e);
+    }
+    
+    setDraggedNode(null);
+    setNodeDragStart(null);
+    setIsNodeDragging(false);
+  }, [isNodeDragging, handleNodeClick]);
+
+  const handleNodeMouseLeave = useCallback(() => {
+    // Only reset if we're not actively dragging
+    if (!isNodeDragging) {
+      setDraggedNode(null);
+      setNodeDragStart(null);
+      setIsNodeDragging(false);
+    }
+  }, [isNodeDragging]);
+
+  const handleGlobalMouseMove = useCallback((e: MouseEvent) => {
+    if (draggedNode && nodeDragStart) {
+      const deltaX = e.clientX - nodeDragStart.x;
+      const deltaY = e.clientY - nodeDragStart.y;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      
+      // Start dragging immediately when mouse moves
+      if (distance > 2) {
+        if (!isNodeDragging) {
+          console.log('Starting drag movement');
+          setIsNodeDragging(true);
+        }
+      }
+      
+      if (isNodeDragging) {
+        const svgRect = svgRef.current?.getBoundingClientRect();
+        if (!svgRect) {
+          console.log('No SVG rect found');
+          return;
+        }
+        
+        // Convert screen coordinates directly to SVG coordinates
+        const svgX = (e.clientX - svgRect.left) / zoom - pan.x;
+        const svgY = (e.clientY - svgRect.top) / zoom - pan.y;
+        
+        // Calculate delta from the initial mouse position
+        const deltaX = svgX - (nodeDragStart.svgX || 0);
+        const deltaY = svgY - (nodeDragStart.svgY || 0);
+        
+        const newX = nodeDragStart.nodeX + deltaX;
+        const newY = nodeDragStart.nodeY + deltaY;
+        
+        // Keep within bounds with node radius consideration
+        const nodeRadius = 35;
+        const padding = nodeRadius + 10; // Extra padding beyond node radius
+        
+        // Use viewBox dimensions for consistent boundaries
+        const containerWidth = 1000;
+        const containerHeight = 600;
+        
+        const boundedX = Math.max(padding, Math.min(containerWidth - padding, newX));
+        const boundedY = Math.max(padding, Math.min(containerHeight - padding, newY));
+        
+        console.log('Dragging node:', {
+          draggedNode,
+          newX: boundedX,
+          newY: boundedY,
+          deltaX,
+          deltaY
+        });
+        
+        // Update node position in state
+        setNodePositions(prev => ({
+          ...prev,
+          [draggedNode]: { x: boundedX, y: boundedY }
+        }));
+        
+        // Update drag start for next move
+        setNodeDragStart(prev => ({
+          ...prev!,
+          x: e.clientX,
+          y: e.clientY,
+          nodeX: boundedX,
+          nodeY: boundedY,
+          svgX: svgX,
+          svgY: svgY
+        }));
+      }
+    }
+  }, [draggedNode, nodeDragStart, isNodeDragging, zoom, pan]);
+
+  const handleGlobalMouseUp = useCallback(() => {
+    console.log('Global mouse up, stopping drag');
+    setDraggedNode(null);
+    setNodeDragStart(null);
+    setIsNodeDragging(false);
   }, []);
 
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+  useEffect(() => {
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [handleGlobalMouseMove, handleGlobalMouseUp]);
 
   // Handle wheel events for zooming
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -294,48 +462,57 @@ export function GraphVisualization({
     setZoom(prev => Math.max(0.5, Math.min(3, prev + delta)));
   }, []);
 
-  // Global mouse event listeners for dragging
-  useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        setPan({
-          x: e.clientX - dragStart.x,
-          y: e.clientY - dragStart.y
-        });
+  const getNodeColor = (type: string, label?: string) => {
+    if (type?.toLowerCase() === 'company' && label) {
+      // Better hash function for more even color distribution
+      let hash = 0;
+      for (let i = 0; i < label.length; i++) {
+        const char = label.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
       }
-    };
-
-    const handleGlobalMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleGlobalMouseMove);
-      document.addEventListener('mouseup', handleGlobalMouseUp);
+      // Add some additional variation
+      hash = hash * 31 + label.length;
+      hash = Math.abs(hash);
+      // Use bright, high-contrast colors that stand out against dark background
+      const colors = [
+        '#3b82f6', // Blue
+        '#10b981', // Green
+        '#f59e0b', // Amber
+        '#ef4444', // Red
+        '#8b5cf6', // Purple
+        '#06b6d4', // Cyan
+        '#f97316', // Orange
+        '#84cc16', // Lime
+        '#ec4899', // Pink
+        '#14b8a6', // Teal
+        '#a855f7', // Violet
+        '#f43f5e', // Rose
+        '#22c55e', // Emerald
+        '#eab308', // Yellow
+        '#06b6d4', // Sky
+        '#f97316', // Orange
+        '#84cc16', // Lime
+        '#ec4899', // Pink
+        '#14b8a6', // Teal
+        '#a855f7', // Violet
+        '#f43f5e', // Rose
+        '#22c55e', // Emerald
+        '#eab308', // Yellow
+      ];
+      return colors[Math.abs(hash) % colors.length];
     }
-
-    return () => {
-      document.removeEventListener('mousemove', handleGlobalMouseMove);
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
-    };
-  }, [isDragging, dragStart]);
-
-  const getNodeColor = (type: string) => {
-    switch (type) {
-      case 'company': return 'hsl(var(--primary))';
-      case 'person': return 'hsl(var(--chart-3))';
-      case 'transaction': return 'hsl(var(--chart-2))';
-      case 'rating': return 'hsl(var(--chart-4))';
-      default: return 'hsl(var(--muted))';
+    switch (type?.toLowerCase()) {
+      case 'person': return '#10b981'; // Green
+      case 'transaction': return '#3b82f6'; // Blue
+      case 'rating': return '#f59e0b'; // Amber
+      case 'regulatoryevent': return '#ef4444'; // Red
+      case 'transactionevent': return '#8b5cf6'; // Purple
+      case 'company': return '#06b6d4'; // Cyan
+      default: return '#f97316'; // Orange
     }
   };
 
-  const handleNodeClick = (node: GraphNode, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling
-    setSelectedNode(node.id);
-    onNodeClick?.(node);
-    console.log('Node clicked:', node);
-  };
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
@@ -343,6 +520,8 @@ export function GraphVisualization({
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setSelectedNode(null);
+    setNodePositions({});
+    setLayoutApplied(false);
   };
 
   const handleFullscreen = () => {
@@ -430,13 +609,9 @@ export function GraphVisualization({
             ref={svgRef}
             width="100%" 
             height="100%" 
-            viewBox={`${-pan.x} ${-pan.y} ${500/zoom} ${400/zoom}`}
-            className={`${isDragging ? 'cursor-grabbing' : 'cursor-grab'} select-none`}
+            viewBox="0 0 1000 600"
+            className="select-none"
             data-testid="graph-canvas"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
             onWheel={handleWheel}
           >
             {/* Grid background */}
@@ -481,39 +656,32 @@ export function GraphVisualization({
             })}
             
             {/* Nodes */}
-            {displayNodes.map((node) => (
+            {displayNodes.map((node, index) => (
               <motion.g 
                 key={node.id}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3, delay: Math.random() * 0.2 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className="cursor-pointer"
+                onMouseDown={(e) => handleNodeMouseDown(e, node)}
+                onMouseUp={(e) => handleNodeMouseUp(e, node)}
+                onMouseLeave={handleNodeMouseLeave}
               >
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={selectedNode === node.id ? "25" : "20"}
-                  fill={getNodeColor(node.type)}
-                  stroke={selectedNode === node.id ? "hsl(var(--ring))" : "white"}
-                  strokeWidth={selectedNode === node.id ? "3" : "2"}
-                  className="cursor-pointer hover:opacity-80 transition-all"
-                  onClick={(e) => handleNodeClick(node, e)}
-                  data-testid={`node-${node.id}`}
+                  r="35"
+                  fill={getNodeColor(node.type, node.label)}
+                  className="hover:opacity-80 transition-opacity"
                 />
                 <text
                   x={node.x}
-                  y={node.y + 35}
+                  y={node.y + 4}
                   textAnchor="middle"
-                  className="text-xs fill-foreground pointer-events-none font-medium"
+                  className="text-xs fill-background pointer-events-none font-medium"
+                  style={{ fontSize: '10px' }}
                 >
-                  {node.label}
-                </text>
-                <text
-                  x={node.x}
-                  y={node.y + 48}
-                  textAnchor="middle"
-                  className="text-xs fill-muted-foreground pointer-events-none"
-                >
-                  {node.type}
+                  {node.label.length > 15 ? node.label.substring(0, 15) + '...' : node.label}
                 </text>
               </motion.g>
             ))}
@@ -617,12 +785,8 @@ export function GraphVisualization({
                 ref={svgRef}
                 width="100%" 
                 height="100%" 
-                viewBox={`${-pan.x} ${-pan.y} ${500/zoom} ${400/zoom}`}
-                className={`${isDragging ? 'cursor-grabbing' : 'cursor-grab'} select-none`}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                viewBox="0 0 1000 600"
+                className="select-none"
                 onWheel={handleWheel}
               >
                 {/* Grid background */}
@@ -666,38 +830,32 @@ export function GraphVisualization({
                 })}
                 
                 {/* Nodes */}
-                {displayNodes.map((node) => (
+                {displayNodes.map((node, index) => (
                   <motion.g 
                     key={node.id}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.3, delay: Math.random() * 0.2 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className="cursor-pointer"
+                    onMouseDown={(e) => handleNodeMouseDown(e, node)}
+                    onMouseUp={(e) => handleNodeMouseUp(e, node)}
+                    onMouseLeave={handleNodeMouseLeave}
                   >
                     <circle
                       cx={node.x}
                       cy={node.y}
-                      r={selectedNode === node.id ? "25" : "20"}
-                      fill={getNodeColor(node.type)}
-                      stroke={selectedNode === node.id ? "hsl(var(--ring))" : "white"}
-                      strokeWidth={selectedNode === node.id ? "3" : "2"}
-                      className="cursor-pointer hover:opacity-80 transition-all"
-                      onClick={(e) => handleNodeClick(node, e)}
+                      r="35"
+                      fill={getNodeColor(node.type, node.label)}
+                      className="hover:opacity-80 transition-opacity"
                     />
                     <text
                       x={node.x}
-                      y={node.y + 35}
+                      y={node.y + 4}
                       textAnchor="middle"
-                      className="text-xs fill-foreground pointer-events-none font-medium"
+                      className="text-xs fill-background pointer-events-none font-medium"
+                      style={{ fontSize: '10px' }}
                     >
-                      {node.label}
-                    </text>
-                    <text
-                      x={node.x}
-                      y={node.y + 48}
-                      textAnchor="middle"
-                      className="text-xs fill-muted-foreground pointer-events-none"
-                    >
-                      {node.type}
+                      {node.label.length > 15 ? node.label.substring(0, 15) + '...' : node.label}
                     </text>
                   </motion.g>
                 ))}
