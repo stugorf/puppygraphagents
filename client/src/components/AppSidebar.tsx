@@ -10,13 +10,18 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Search, Database, BarChart3, History, Settings, Brain } from "lucide-react";
+import { Search, Database, BarChart3, History, Settings, Brain, FileText, Home } from "lucide-react";
 import { useLocation } from "wouter";
 
 const menuItems = [
   {
-    title: "Query Builder",
+    title: "Home",
     url: "/",
+    icon: Home,
+  },
+  {
+    title: "Query Builder",
+    url: "/query",
     icon: Search,
   },
   {
@@ -33,6 +38,11 @@ const menuItems = [
     title: "Analytics",
     url: "/analytics",
     icon: BarChart3,
+  },
+  {
+    title: "NER",
+    url: "/ner",
+    icon: FileText,
   },
   {
     title: "Query History",

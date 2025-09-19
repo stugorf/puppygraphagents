@@ -6,6 +6,7 @@ import { puppyGraphClient } from "./graph/puppygraph_client";
 import { simplifiedPuppyGraphClient } from "./graph/simplified_puppygraph_client";
 import { DataTransformer } from "./graph/data_transformer";
 import { cypherGenAgent } from "./agents/cypher_gen_wrapper";
+import { nerAgent } from "./agents/ner_wrapper";
 import { 
   insertQueryHistorySchema, 
   temporalQuerySchema, 
@@ -57,6 +58,199 @@ function convertSchemaToContext(schema: any): string {
   }
   
   return context;
+}
+
+// Function to insert extracted entities into the database
+async function insertExtractedEntities(entities: any) {
+  const results = {
+    companies: { inserted: 0, errors: [] },
+    people: { inserted: 0, errors: [] },
+    ratings: { inserted: 0, errors: [] },
+    transactions: { inserted: 0, errors: [] },
+    employments: { inserted: 0, errors: [] },
+    regulatory_events: { inserted: 0, errors: [] }
+  };
+
+  try {
+    // Insert companies first (they're referenced by other entities)
+    for (const company of entities.companies || []) {
+      try {
+        const insertQuery = `
+          INSERT INTO companies (name, ticker, sector, industry, market_cap, founded_year, headquarters, employee_count)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          RETURNING id
+        `;
+        
+        const result = await pool.query(insertQuery, [
+          company.name,
+          company.ticker || null,
+          company.sector,
+          company.industry,
+          company.marketCap || null,
+          company.foundedYear || null,
+          company.headquarters || null,
+          company.employeeCount || null
+        ]);
+        
+        results.companies.inserted++;
+      } catch (error) {
+        results.companies.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+    // Insert people
+    for (const person of entities.people || []) {
+      try {
+        const insertQuery = `
+          INSERT INTO people (name, title, age, nationality, education)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING id
+        `;
+        
+        await pool.query(insertQuery, [
+          person.name,
+          person.title || null,
+          person.age || null,
+          person.nationality || null,
+          person.education || null
+        ]);
+        
+        results.people.inserted++;
+      } catch (error) {
+        results.people.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+    // Insert ratings (need company ID)
+    for (const rating of entities.ratings || []) {
+      try {
+        // Find company ID by name
+        const companyQuery = await pool.query('SELECT id FROM companies WHERE name = $1', [rating.companyName || '']);
+        if (companyQuery.rows.length === 0) continue;
+        
+        const companyId = companyQuery.rows[0].id;
+        
+        const insertQuery = `
+          INSERT INTO ratings (company_id, rating, rating_agency, rating_type, valid_from, valid_to)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING id
+        `;
+        
+        await pool.query(insertQuery, [
+          companyId,
+          rating.rating,
+          rating.ratingAgency,
+          rating.ratingType,
+          rating.validFrom || new Date().toISOString(),
+          rating.validTo || null
+        ]);
+        
+        results.ratings.inserted++;
+      } catch (error) {
+        results.ratings.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+    // Insert transactions
+    for (const transaction of entities.transactions || []) {
+      try {
+        const insertQuery = `
+          INSERT INTO transactions (type, value, currency, status, announced_date, completed_date, description)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          RETURNING id
+        `;
+        
+        await pool.query(insertQuery, [
+          transaction.type,
+          transaction.value || null,
+          transaction.currency,
+          transaction.status,
+          transaction.announcedDate || null,
+          transaction.completedDate || null,
+          transaction.description || null
+        ]);
+        
+        results.transactions.inserted++;
+      } catch (error) {
+        results.transactions.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+    // Insert employments (need person and company IDs)
+    for (const employment of entities.employments || []) {
+      try {
+        // Find person and company IDs
+        const [personQuery, companyQuery] = await Promise.all([
+          pool.query('SELECT id FROM people WHERE name = $1', [employment.personName]),
+          pool.query('SELECT id FROM companies WHERE name = $1', [employment.companyName])
+        ]);
+        
+        if (personQuery.rows.length === 0 || companyQuery.rows.length === 0) continue;
+        
+        const personId = personQuery.rows[0].id;
+        const companyId = companyQuery.rows[0].id;
+        
+        const insertQuery = `
+          INSERT INTO employments (person_id, company_id, position, start_date, end_date, salary)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING id
+        `;
+        
+        await pool.query(insertQuery, [
+          personId,
+          companyId,
+          employment.position,
+          employment.startDate || new Date().toISOString(),
+          employment.endDate || null,
+          employment.salary || null
+        ]);
+        
+        results.employments.inserted++;
+      } catch (error) {
+        results.employments.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+    // Insert regulatory events (need company ID)
+    for (const event of entities.regulatory_events || []) {
+      try {
+        let companyId = null;
+        if (event.companyName) {
+          const companyQuery = await pool.query('SELECT id FROM companies WHERE name = $1', [event.companyName]);
+          if (companyQuery.rows.length > 0) {
+            companyId = companyQuery.rows[0].id;
+          }
+        }
+        
+        const insertQuery = `
+          INSERT INTO regulatory_events (company_id, event_type, regulator, description, amount, currency, event_date, resolution_date, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          RETURNING id
+        `;
+        
+        await pool.query(insertQuery, [
+          companyId,
+          event.eventType,
+          event.regulator,
+          event.description,
+          event.amount || null,
+          event.currency,
+          event.eventDate || new Date().toISOString(),
+          event.resolutionDate || null,
+          event.status
+        ]);
+        
+        results.regulatory_events.inserted++;
+      } catch (error) {
+        results.regulatory_events.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+  } catch (error) {
+    console.error('Error inserting extracted entities:', error);
+  }
+
+  return results;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -658,6 +852,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         error: "Failed to fetch database schema",
         details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // NER Processing Endpoint
+  app.post("/api/ner/process", async (req, res) => {
+    try {
+      const { text } = req.body;
+      
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({ 
+          error: "Text is required and must be a string" 
+        });
+      }
+
+      if (text.length > 10000) {
+        return res.status(400).json({ 
+          error: "Text is too long. Maximum 10,000 characters allowed." 
+        });
+      }
+
+      console.log(`Processing NER for text: ${text.substring(0, 100)}...`);
+      const startTime = Date.now();
+      
+      // Process text with NER agent
+      const nerResult = await nerAgent.processText(text);
+      const processingTime = Date.now() - startTime;
+
+      if (!nerResult.success) {
+        return res.status(500).json({
+          error: "NER processing failed",
+          details: nerResult.error || "Unknown error during entity extraction"
+        });
+      }
+
+      // Insert extracted entities into database
+      const insertResults = await insertExtractedEntities(nerResult.entities);
+
+      res.json({
+        success: true,
+        entitiesCount: nerResult.entitiesCount,
+        processingTime,
+        entities: nerResult.entities,
+        insertResults,
+        message: "NER processing completed successfully"
+      });
+
+    } catch (error) {
+      console.error("Error processing NER request:", error);
+      res.status(500).json({ 
+        error: "Failed to process NER request",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // NER Agent Status
+  app.get("/api/ner/status", async (req, res) => {
+    try {
+      const isWorking = await nerAgent.test();
+      res.json({ 
+        status: isWorking ? "operational" : "error",
+        agent_type: "NER DSPy",
+        capabilities: ["entity_extraction", "database_ingestion", "company_report_processing"]
+      });
+    } catch (error) {
+      res.json({ 
+        status: "error", 
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });

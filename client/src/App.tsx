@@ -6,18 +6,22 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Home from "@/pages/Home";
+import { Dashboard } from "@/components/Dashboard";
 import GraphExplorer from "@/pages/GraphExplorer";
 import DataBrowser from "@/pages/DataBrowser";
 import Analytics from "@/pages/Analytics";
+import NER from "@/pages/NER";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/query" component={Dashboard} />
       <Route path="/graph" component={GraphExplorer} />
       <Route path="/data" component={DataBrowser} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/ner" component={NER} />
       <Route path="/history" component={Home} />
       <Route path="/settings" component={Home} />
       <Route component={NotFound} />
